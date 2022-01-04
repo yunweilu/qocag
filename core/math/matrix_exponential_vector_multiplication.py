@@ -146,10 +146,10 @@ def get_s_ad(A,tol):
     s = 1
     while (1):
         tol_power = jnp.ceil(jnp.log10(tol))
-        norm_A = one_norm(A) / s
+        norm_A = one_norm_ad(A) / s
         max_term_notation = jnp.floor(norm_A)
         max_term = 1
-        for i in range(1, jnp.int64(max_term_notation)):
+        for i in range(1, jnp.int32(max_term_notation)):
             max_term = max_term * norm_A / i
             max_power = jnp.ceil(jnp.log10(max_term))
             if max_power > 30:
