@@ -14,6 +14,7 @@ def grape_schroedinger_discrete(total_time_steps,
                                 save_file_path=None,
                                 save_intermediate_states=False,
                                 save_iteration_step=0,mode='AD'):
+
     sys_para=system_parameters(total_time_steps,
                                 costs, total_time, H0,H_control,
                                 initial_states,
@@ -27,6 +28,9 @@ def grape_schroedinger_discrete(total_time_steps,
                                 save_file_path,
                                 save_intermediate_states,
                                 save_iteration_step,mode)
-    controls=initial_controls()
+    controls=initialize_controls(total_time_steps,initial_controls, max_control_norms)
+
+def cost_gradients(sys_para):
+
 
 
