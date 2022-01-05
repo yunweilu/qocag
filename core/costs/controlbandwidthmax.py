@@ -46,7 +46,7 @@ class ControlBandwidthMax():
         self.freqs = jnp.fft.fftfreq(total_time_steps, d=dt)
         self.type="control_explicitly_related"
 
-    def cost(self, controls, states, system_eval_step,manual_mode=None):
+    def cost(self, controls):
         """
         Compute the penalty.
 

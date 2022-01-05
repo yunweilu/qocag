@@ -41,7 +41,7 @@ class ControlVariation():
         self.type="control_explicitly_related"
         self.control_eval_account=total_time_steps
 
-    def cost(self, controls, states, system_eval_step,manual_mode):
+    def cost(self, controls):
         """
         Compute the penalty.
 
