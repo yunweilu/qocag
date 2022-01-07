@@ -5,7 +5,7 @@ Action of matrix exponential and action of propagator derivative on a vector or 
 import numpy as np
 import scipy.sparse.linalg
 from scipy.sparse import bmat, isspmatrix
-import jax.numpy as jnp
+import autograd.numpy as anp
 
 def expmat_der_vec_mul(A, E, tol, state):
     """
@@ -60,7 +60,7 @@ def one_norm_ad(A):
     one norm of A
     """
 
-    return jnp.linalg.norm(A, 1)
+    return np.linalg.norm(A, 1)
 
 def trace(A):
     """
@@ -82,7 +82,7 @@ def trace_ad(A):
     Returns:
     trace of A
     """
-    return jnp.trace(A)
+    return anp.trace(A)
 
 
 def ident_like(A):
@@ -106,7 +106,7 @@ def ident_like_ad(A):
     Returns:
     Identity matrix which has same dimension as A
     """
-    return jnp.eye(A.shape[0], A.shape[1], dtype=A.dtype)
+    return anp.eye(A.shape[0], A.shape[1], dtype=A.dtype)
 
 def get_s(A,tol):
     """
@@ -145,16 +145,16 @@ def get_s_ad(A,tol):
     """
     s = 1
     while (1):
-        tol_power = jnp.ceil(jnp.log10(tol))
+        tol_power = anp.ceil(anp.log10(tol))
         norm_A = one_norm_ad(A) / s
-        max_term_notation = jnp.floor(norm_A)
+        max_term_notation = anp.floor(norm_A)
         max_term = 1
-        for i in range(1, jnp.int32(max_term_notation)):
+        for i in range(1, anp.int32(max_term_notation)):
             max_term = max_term * norm_A / i
-            max_power = jnp.ceil(jnp.log10(max_term))
+            max_power = anp.ceil(anp.log10(max_term))
             if max_power > 30:
                 break
-        max_power = jnp.ceil(jnp.log10(max_term))
+        max_power = anp.ceil(anp.log10(max_term))
         if max_power - 16 <= tol_power:
             break
         s = s + 1
@@ -232,9 +232,9 @@ def expmat_vec_mul_ad(A, b, tol=None):
     f = b
     j = 0
     while (1):
-        eta = jnp.exp(mu / float(s))
+        eta = anp.exp(mu / float(s))
         coeff = s * (j + 1)
-        b = jnp.matmul(A,b) / coeff
+        b = anp.matmul(A,b) / coeff
         c2 = one_norm_ad(b)
         f = f + b
         total_norm = one_norm_ad(f)
@@ -245,10 +245,10 @@ def expmat_vec_mul_ad(A, b, tol=None):
     f = eta * f
     b = f
     for i in range(1, int(s)):
-        eta = jnp.exp(mu / float(s))
+        eta = anp.exp(mu / float(s))
         for j in range(m):
             coeff = s * (j + 1)
-            b = jnp.matmul(A,b)  / coeff
+            b = anp.matmul(A,b)  / coeff
             c2 = one_norm_ad(b)
             f = f+ b
             total_norm = one_norm_ad(f)

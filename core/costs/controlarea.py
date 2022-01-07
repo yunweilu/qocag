@@ -2,7 +2,7 @@
 controlarea.py - This module defines a cost function that penalizes
 the "area under the curve" of the control parameters.
 """
-import jax.numpy as jnp
+import autograd.numpy as anp
 class ControlArea():
     """
     This cost penalizes the area under the
@@ -29,7 +29,7 @@ class ControlArea():
         Aruments:
         total_time_steps
         """
-        super().__init__(cost_multiplier=cost_multiplier)
+        self.cost_multiplier=cost_multiplier
         self.control_num = control_num
         self.control_size = control_num * total_time_steps
         self.max_control_norms = max_control_norms
@@ -55,15 +55,15 @@ class ControlArea():
         # The cost is the discrete integral of each normalized control parameter
         # over the evolution time.
             for i in range(self.control_num):
-                cost = cost + jnp.abs(jnp.sum(normalized_controls[i]))
+                cost = cost + anp.abs(anp.sum(normalized_controls[i]))
             cost_normalized = cost / self.control_size
         else:
             for i in range(self.control_num):
-                power=jnp.abs(jnp.sum(controls[:, i]))
+                power=anp.abs(anp.sum(controls[:, i]))
                 if power>self.max_control_norms[i]:
-                    cost = cost + jnp.abs(jnp.sum(controls[i]))
+                    cost = cost + anp.abs(anp.sum(controls[i]))
                 cost=cost-self.max_control_norms[i]
-            cost_normalized = cost / jnp.sum(controls)
+            cost_normalized = cost / anp.sum(controls)
 
         return cost_normalized * self.cost_multiplier
 

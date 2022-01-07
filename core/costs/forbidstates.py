@@ -6,13 +6,11 @@ the occupation of a set of forbidden states.
 
 import numpy as np
 
-from qoc.models import Cost
-from qoc.standard.functions import conjugate_transpose
-from qoc.standard.functions import conjugate_transpose_m
-import jax.numpy as jnp
-from qoc.standard.functions import s_a_s_multi,block_fre
-from scipy.sparse import  bmat
-class ForbidStates(Cost):
+
+from core.math.common import conjugate_transpose,conjugate_transpose_ad
+import autograd.numpy as anp
+from core.math import expmat_der_vec_mul,expmat_vec_mul
+class ForbidStates():
     """
     This cost penalizes the occupation of a set of forbidden states.
 
@@ -28,9 +26,7 @@ class ForbidStates(Cost):
     requires_step_evaluation = True
 
 
-    def __init__(self, forbidden_states,
-                 system_eval_count,
-                 cost_eval_step=1,
+    def __init__(self, forbidden_states,total_time_steps,
                  cost_multiplier=1.,):
         """
         See class fields for arguments not listed here.
@@ -40,18 +36,22 @@ class ForbidStates(Cost):
         forbidden_states
         system_eval_count
         """
-        super().__init__(cost_multiplier=cost_multiplier)
-        self.state_count = forbidden_states.shape[0]
-        self.cost_evaluation_count, _ = np.divmod(system_eval_count - 1, cost_eval_step)
-        self.cost_normalization_constant = self.cost_evaluation_count * self.state_count
-        self.forbidden_states_count = np.array([forbidden_states_.shape[0]
-                                                for forbidden_states_
-                                                in forbidden_states])
-        self.forbidden_states_dagger = conjugate_transpose(forbidden_states)
+        self.cost_multiplier=cost_multiplier
+        self.total_time_steps=total_time_steps
+        self.forbidden_states_count = len(forbidden_states)
+        self.forbidden_states_dagger = conjugate_transpose_ad(forbidden_states)
         self.forbidden_states=forbidden_states
-        self.type = "non-control"
+        self.type = "control_implicitly_related"
+        if len(forbidden_states.shape) is 3:
+            self.state_transfer = False
+            self.state_count = forbidden_states.shape[1]
+        else:
+            self.state_transfer = True
+            self.state_count = 1
+        self.cost_normalization_constant = 1/self.total_time_steps/len(forbidden_states)/(self.state_count**2)
 
-    def cost(self, controls, states, system_eval_step,manual_mode=None):
+
+    def cost(self, states,mode):
         """
         Compute the penalty.
 
@@ -65,46 +65,22 @@ class ForbidStates(Cost):
         """
         # The cost is the overlap (fidelity) of the evolved state and each
         # forbidden state.
-        if manual_mode==True:
-            cost = 0
-            self.inner_products=[]
-            for i, forbidden_states_dagger_ in enumerate(self.forbidden_states_dagger):
-                state = states[i]
-                state_cost = 0
-                self.inner_products.append([])
-                for forbidden_state_dagger in forbidden_states_dagger_:
-                    inner_product = np.matmul(forbidden_state_dagger, state)[0, 0]
-                    fidelity = np.real(inner_product * np.conjugate(inner_product))
-                    state_cost = state_cost + fidelity
-                    self.inner_products[i].append(inner_product)
-            # ENDFOR
-                state_cost_normalized = state_cost / self.forbidden_states_count[i]
-                cost = cost + state_cost_normalized
-
-            #ENDFOR
-
-            # Normalize the cost for the number of evolving states
-            # and the number of times the cost is computed.
-            cost_normalized = cost / self.cost_normalization_constant
+        if mode is "AG":
+            if self.state_transfer is True:
+                inner_products = anp.inner(anp.conjugate(self.forbidden_states), states)
+                inner_products_square = anp.real(inner_products * anp.conjugate(inner_products))
+                cost_value = anp.sum(inner_products_square)
         else:
-            cost = 0
-            for i, forbidden_states_dagger_ in enumerate(self.forbidden_states_dagger):
-                state = states[i]
-                state_cost = 0
-                for forbidden_state_dagger in forbidden_states_dagger_:
-                    inner_product = jnp.matmul(forbidden_state_dagger, state)[0, 0]
-                    fidelity = jnp.real(inner_product * jnp.conjugate(inner_product))
-                    state_cost = state_cost + fidelity
-                # ENDFOR
-                state_cost_normalized = state_cost / self.forbidden_states_count[i]
-                cost = cost + state_cost_normalized
-            # ENDFOR
-
+            if self.state_transfer is True:
+                inner_products=anp.inner(anp.conjugate(self.forbidden_states),states)
+            else:
+                inner_products=anp.trace(anp.matmul(self.forbidden_states_dagger, states))
+            inner_products_square = anp.real(inner_products * anp.conjugate(inner_products))
+            cost_value = anp.sum(inner_products_square)
             # Normalize the cost for the number of evolving states
             # and the number of times the cost is computed.
-            cost_normalized = cost / self.cost_normalization_constant
-
-        return cost_normalized * self.cost_multiplier
+        cost_normalized = cost_value * self.cost_normalization_constant
+        return cost_normalized
 
 
     def gradient_initialize(self, reporter):
@@ -122,7 +98,7 @@ class ForbidStates(Cost):
                 self.back_states[i][j]=self.new_state[i][j]+self.inner_products[i][j]*self.forbidden_states[i][j]
 
     def update_state_forw(self, A,tol):
-        self.final_states = s_a_s_multi(A,tol, self.final_states)
+        self.final_states = expmat_vec_mul(A,tol, self.final_states)
 
     def gradient(self, A,E,tol):
         grads = 0
@@ -130,10 +106,10 @@ class ForbidStates(Cost):
         for i in range(len(self.inner_products)):
             self.new_state.append([])
             for j in range(len(self.inner_products[i])):
-                b_state, new_state = block_fre(A, E, tol, self.back_states[i][j])
+                b_state, new_state = expmat_der_vec_mul(A, E, tol, self.back_states[i][j])
                 self.new_state[i].append(new_state)
                 grads = grads + self.cost_multiplier * (2  * np.real(
-                    np.matmul(conjugate_transpose_m(b_state), self.final_states[i]))) /( self.state_count*self.cost_evaluation_count*self.forbidden_states_count[i])
+                    np.matmul(conjugate_transpose(b_state), self.final_states[i]))) /( self.state_count*self.cost_evaluation_count*self.forbidden_states_count[i])
 
         return grads
 

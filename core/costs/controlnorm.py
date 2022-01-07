@@ -2,7 +2,7 @@
 controlnorm.py - This module defines a cost function that penalizes
 the value of the norm of the control parameters.
 """
-import jax.numpy as jnp
+import autograd.numpy as anp
 class ControlNorm():
     """
     This cost penalizes the value of the norm of the control parameters.
@@ -34,7 +34,7 @@ class ControlNorm():
         control_num
         total_time_steps
         """
-        super().__init__(cost_multiplier=cost_multiplier)
+        self.cost_multiplier=cost_multiplier
         self.control_weights = control_weights
         self.controls_size = total_time_steps * control_num
         self.max_control_norms = max_control_norms
@@ -61,18 +61,18 @@ class ControlNorm():
                 controls = controls[:, ] * self.control_weights
         # The cost is the sum of the square of the modulus of the normalized,
         # weighted, controls.
-            cost = jnp.sum(jnp.real(controls * jnp.conjugate(controls)))
+            cost = anp.sum(anp.real(controls * anp.conjugate(controls)))
             cost_normalized = cost / self.controls_size
         else:
             for i, max_norm in enumerate(self.max_control_norms):
                 control = controls[:, i]
-                control_sq = jnp.abs(control)
-                penalty_indices = jnp.nonzero(control_sq >= max_norm)[0]
+                control_sq = anp.abs(control)
+                penalty_indices = anp.nonzero(control_sq >= max_norm)[0]
                 penalized_control = control_sq[penalty_indices]
                 penalty = (penalized_control-max_norm)/penalized_control
                 if self.control_weights is not None:
                     penalty_normalized=penalty*self.control_weights[penalty_indices]
                 else:
                     penalty_normalized = penalty / (penalty_indices.shape[0]* len(self.max_control_norms))
-                cost_normalized = cost_normalized + jnp.sum(penalty_normalized)
+                cost_normalized = cost_normalized + anp.sum(penalty_normalized)
         return cost_normalized * self.cost_multiplier

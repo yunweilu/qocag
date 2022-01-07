@@ -3,7 +3,7 @@ lbfgsb.py - a module to expose the L-BFGS-B optimization algorithm
 """
 
 from scipy.optimize import minimize
-
+import numpy as np
 class LBFGSB(object):
     """
     The L-BFGS-B optimizer.
@@ -38,7 +38,7 @@ class LBFGSB(object):
         """
         # Disregard termination conditions.
         function_ = lambda *args, **kwargs: function(*args, **kwargs)[0]
-        jacobian_ = lambda *args, **kwargs: jacobian(*args, **kwargs)[0]
+        jacobian_ = lambda *args, **kwargs: np.array(jacobian(*args, **kwargs)[0])
         # NOTE: min_error termination not implemented
         options = {
             "maxiter": iteration_count,

@@ -2,7 +2,7 @@
 controlbandwidthmax.py - This module defines a cost function that penalizes all
 control frequencies above a specified maximum.
 """
-import jax.numpy as jnp
+import autograd.numpy as anp
 class ControlBandwidthMax():
     """
     This cost penalizes control frequencies above a set maximum.
@@ -38,12 +38,12 @@ class ControlBandwidthMax():
         total_time_steps
         evolution_time
         """
-        super().__init__(cost_multiplier=cost_multiplier)
+        self.cost_multiplier=cost_multiplier
         self.max_bandwidths = max_bandwidths
         self.control_num = control_num
         dt = evolution_time / (total_time_steps - 1)
         self.total_time_steps=total_time_steps
-        self.freqs = jnp.fft.fftfreq(total_time_steps, d=dt)
+        self.freqs = anp.fft.fftfreq(total_time_steps, d=dt)
         self.type="control_explicitly_related"
 
     def cost(self, controls):
@@ -62,11 +62,11 @@ class ControlBandwidthMax():
         # Iterate over the controls, penalize each control that has
         # frequencies greater than its maximum frequency.
         for i, max_bandwidth in enumerate(self.max_bandwidths):
-            control_fft = jnp.fft.fft(controls[:, i])
-            control_fft_sq = jnp.abs(control_fft)
-            penalty_freq_indices = jnp.nonzero(self.freqs >= max_bandwidth)[0]
+            control_fft = anp.fft.fft(controls[:, i])
+            control_fft_sq = anp.abs(control_fft)
+            penalty_freq_indices = anp.nonzero(self.freqs >= max_bandwidth)[0]
             penalized_ffts = control_fft_sq[penalty_freq_indices]
-            penalty = jnp.sum(penalized_ffts)
+            penalty = anp.sum(penalized_ffts)
             if penalty<1e-4:
                 penalty_normalized=0
             else:
