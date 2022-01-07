@@ -45,9 +45,11 @@ class TargetStateInfidelityTime():
         if len(target_states.shape) is 2:
             self.state_transfer = False
             self.state_count = target_states.shape[0]
+            self.target_states = target_states
         else:
             self.state_transfer = True
             self.state_count = 1
+            self.target_states = np.array([target_states])
         self.cost_multiplier = cost_multiplier
         self.cost_normalization_constant = total_time_steps / (self.state_count ** 2)
         self.cost_multiplier=cost_multiplier

@@ -16,7 +16,6 @@ class system_parameters():
                  save_file_path,
                  save_intermediate_states,
                  save_iteration_step, mode, tol):
-        self.initial_states=initial_states
         self.H_controls = H_controls
         self.control_num = len(H_controls)
         self.total_time_steps = total_time_steps
@@ -37,6 +36,14 @@ class system_parameters():
         self.save_intermediate_states = save_intermediate_states
         self.save_iteration_step = save_iteration_step
         self.mode = mode
-        self.initial_states = initial_states
         self.tol = tol
+        if len(initial_states.shape) is 1:
+            self.dimension = 1
+            self.state_transfer = True
+            self.initial_states=np.array([initial_states])
+        else:
+            self.dimension = 2
+            self.state_transfer = False
+            self.initial_states = initial_states
+
 
