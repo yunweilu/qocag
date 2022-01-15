@@ -5,9 +5,9 @@ the occupation of a set of forbidden states.
 
 import numpy as np
 
-from core.math.common import conjugate_transpose_ad
+from qoc_ag.math.common import conjugate_transpose_ad
 import autograd.numpy as anp
-from core.math import expmat_der_vec_mul, expmat_vec_mul
+from qoc_ag.math import expmat_der_vec_mul, expmat_vec_mul
 
 
 class ForbidStates():

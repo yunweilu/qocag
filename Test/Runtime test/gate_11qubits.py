@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.sparse import kron,dia_matrix,identity,csc_matrix
-from core.models.close_system.optimization import grape_schroedinger_discrete
-from core.costs import TargetStateInfidelity
+from qoc_ag.models.close_system.optimization import grape_schroedinger_discrete
+from qoc_ag.costs import TargetStateInfidelity
 def harmonic(H_size):
     diagnol = np.arange(H_size)
     up_diagnol = np.sqrt(diagnol)

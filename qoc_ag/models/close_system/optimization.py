@@ -1,11 +1,11 @@
-from core.optimizers.adam import Adam
-from core.models.close_system.parameters import system_parameters
-from core.math.initialization import initialize_controls
-from core.math.common import get_H_total
-from core.math.autogradutil import value_and_grad
+from qoc_ag.optimizers.adam import Adam
+from qoc_ag.models.close_system.parameters import system_parameters
+from qoc_ag.math.initialization import initialize_controls
+from qoc_ag.math.common import get_H_total
+from qoc_ag.math.autogradutil import value_and_grad
 import numpy as np
 from jax.config import config
-from core.math import expmat_vec_mul, expmat_vec_mul_ad,expm_pade
+from qoc_ag.math import expmat_vec_mul, expmat_vec_mul_ad,expm_pade
 import scqubits.settings as settings
 from scqubits.utils.cpu_switch import get_map_method
 import multiprocessing
