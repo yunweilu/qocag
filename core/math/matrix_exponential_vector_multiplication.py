@@ -33,7 +33,7 @@ def expmat_der_vec_mul(A, E, tol, state):
     new = state[HILBERT_SIZE:2 * HILBERT_SIZE]
     state = state[0:HILBERT_SIZE]
 
-    return state.reshape((HILBERT_SIZE, 1)), new.reshape((HILBERT_SIZE, 1))
+    return state, new
 
 
 """Compute the action of the matrix exponential."""

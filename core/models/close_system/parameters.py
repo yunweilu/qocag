@@ -2,7 +2,8 @@ import numpy as np
 
 
 class system_parameters():
-    final_states=None
+    final_states = None
+
     def __init__(self, total_time_steps,
                  costs, total_time, H0, H_controls,
                  initial_states,
@@ -37,13 +38,40 @@ class system_parameters():
         self.save_iteration_step = save_iteration_step
         self.mode = mode
         self.tol = tol
-        if len(initial_states.shape) is 1:
-            self.dimension = 1
-            self.state_transfer = True
-            self.initial_states=np.array([initial_states])
-        else:
-            self.dimension = 2
-            self.state_transfer = False
+        self.only_cost = False
+        if mode is "AG":
+            if len(initial_states.shape) is 1:
+                self.dimension = 1
+                self.state_transfer = True
+                self.initial_states = np.array([initial_states])
+            else:
+                self.dimension = len(initial_states[0])
+                self.state_transfer = False
+                self.initial_states = initial_states
+            self.classification()
+        if mode is "AD":
+            for cost in self.costs:
+                cost.format(self.control_num, self.total_time_steps)
             self.initial_states = initial_states
 
-
+    def classification(self):
+        self.state_packages = []
+        for state_index, initial_state in enumerate(self.initial_states):
+            state_package = {}
+            state_package['initial_state'] = initial_state
+            for cost in self.costs:
+                if cost.name is not "ForbidStates":
+                    state_package[cost.name] = cost.target_states[state_index]
+                else:
+                    state_package[cost.name] = cost.forbidden_states[:, state_index]
+                cost.format(self.control_num, self.total_time_steps)
+                state_package[cost.name + "_cost_value"] = np.zeros(cost.cost_format, dtype=complex)
+                state_package[cost.name + "_grad_value"] = np.zeros(cost.grad_format, dtype=complex)
+            self.state_packages.append(state_package)
+        for cost in self.costs:
+            if cost.name is not "ForbidStates":
+                cost.target_states = None
+                cost.target_states_dagger = None
+            else:
+                cost.forbidden_states = None
+                cost.forbidden_states_dagger = None

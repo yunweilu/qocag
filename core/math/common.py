@@ -4,7 +4,7 @@ import numpy as np
 def get_H_total(controls,H_controls,H0,time_step):
     H_total=H0
     for control,H_control in zip(controls,H_controls):
-        H_total=H_total+control[time_step]*H_control
+        H_total=H_total+control[time_step-1]*H_control
     return H_total
 
 
@@ -32,6 +32,6 @@ def conjugate_transpose_ad(matrix):
     _conjugate_tranpose :: numpy.ndarray the conjugate transpose
         of matrix
     """
-    conjugate_transpose_ = anp.conjugate(anp.transpose(matrix))
+    conjugate_transpose_ = anp.conjugate(anp.swapaxes(matrix,-1,-2))
 
     return conjugate_transpose_
