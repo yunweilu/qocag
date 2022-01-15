@@ -38,7 +38,7 @@ class TargetStateInfidelity():
             self.target_states = np.array([target_states])
         self.cost_multiplier=cost_multiplier
         self.cost_normalization_constant=1/(self.state_count**2)
-        self.target_states_dagger = conjugate_transpose_ad(target_states)
+        self.target_states_dagger = conjugate_transpose_ad(self.target_states)
         self.type = "control_implicitly_related"
         self.cost_format = (1)
 

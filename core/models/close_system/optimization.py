@@ -5,10 +5,11 @@ from core.math.common import get_H_total
 from core.math.autogradutil import value_and_grad
 import numpy as np
 from jax.config import config
-from core.math import expmat_vec_mul, expmat_vec_mul_ad
+from core.math import expmat_vec_mul, expmat_vec_mul_ad,expm_pade
 import scqubits.settings as settings
 from scqubits.utils.cpu_switch import get_map_method
-
+import multiprocessing
+import autograd.numpy as anp
 from functools import partial
 import warnings
 warnings.simplefilter("ignore", UserWarning)
@@ -166,7 +167,7 @@ def cost_gradients(controls, sys_para):
         cost_value = cost_value_ad_part + cost_value_ag_part
         grads = grads_ad_part + grads_ag_part
     #   if sys_para.mode is "AG":
-    print(cost_value,grads)
+    print(cost_value)
     grads = np.ravel(grads)
     # turn to optimizer format which is 1darray
     if cost_value <= sys_para.min_error:
@@ -201,7 +202,8 @@ def close_evolution(controls, sys_para):
         for n in range(total_time_steps):
             time_step = n+1
             H_total = get_H_total(controls, H_controls, H0, time_step)
-            state = expmat_vec_mul_ad(-1j * delta_t * H_total, state, tol)
+            propagator=expm_pade(-1j * delta_t * H_total)
+            state = anp.matmul(propagator,state)
             for cost in sys_para.costs:
                 if cost.type is not "control_explicitly_related" and cost.requires_step_evaluation:
                     cost_value = cost_value + cost.cost(state, mode, None,None,None)
@@ -285,7 +287,7 @@ def analytical_grads(controls, sys_para , state_package):
                     state_package[cost.name + "_grad_value"] = cost.grads( state_package['forward_state'],state_package[cost.name+"_bs"],1j * delta_t * H_total,
                                                                                   1j * delta_t * H_control,
                                                                                   state_package[cost.name + "_grad_value"],tol,time_step-1,control_index)
-                    state_package[cost.name + "_bs"] = cost.update_bs(state_package[cost.name],state_package[cost.name+"_grads_factor"],time_step-1)
+                state_package[cost.name + "_bs"] = cost.update_bs(state_package[cost.name],state_package[cost.name+"_grads_factor"],time_step-1)
     return state_package
 
 

@@ -5,7 +5,7 @@ the occupation of a set of forbidden states.
 
 import numpy as np
 
-from core.math.common import conjugate_transpose, conjugate_transpose_ad
+from core.math.common import conjugate_transpose_ad
 import autograd.numpy as anp
 from core.math import expmat_der_vec_mul, expmat_vec_mul
 

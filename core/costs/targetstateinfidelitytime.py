@@ -6,14 +6,9 @@ at each cost evaluation step.
 
 
 import numpy as np
-
-from functools import partial
-from scqubits.utils.cpu_switch import get_map_method
-import multiprocessing
-import scqubits.settings as settings
-from core.math.common import conjugate_transpose,conjugate_transpose_ad
+from core.math.common import conjugate_transpose_ad
 import autograd.numpy as anp
-from core.math import expmat_der_vec_mul,expmat_vec_mul
+from core.math import expmat_der_vec_mul
 from scipy.sparse import bmat
 class TargetStateInfidelityTime():
     """
@@ -52,7 +47,7 @@ class TargetStateInfidelityTime():
             self.target_states = np.array([target_states])
         self.cost_multiplier = cost_multiplier
         self.cost_multiplier=cost_multiplier
-        self.target_states_dagger = conjugate_transpose_ad(target_states)
+        self.target_states_dagger = conjugate_transpose_ad(self.target_states)
         self.type="control_implicitly_related"
 
     def format(self,control_num,total_time_steps):

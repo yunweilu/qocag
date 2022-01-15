@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.sparse import kron,dia_matrix,identity,csc_matrix
-from core.optimization import grape_schroedinger_discrete
+from core.models.close_system.optimization import grape_schroedinger_discrete
 from core.costs import TargetStateInfidelity
 def harmonic(H_size):
     diagnol = np.arange(H_size)
@@ -48,7 +48,7 @@ def Had(d,n):
     Had_gat=Had
     for i in range(n-1):
         Had_gat=np.kron(Had_gat,Had)
-    return Had_gat.reshape(d**n,d**n,1)
+    return Had_gat.reshape(d**n,d**n)
 
 def control_H(control,H_control):
     H=0
@@ -58,7 +58,7 @@ def control_H(control,H_control):
 def get_initial(N):
     state=[]
     for i in range(2**N):
-        s=np.zeros((2 ** N, 1))
+        s=np.zeros((2 ** N))
         s[i]=1
         state.append(s)
     return np.array(state)
@@ -76,7 +76,7 @@ def simulation(q_number):
     grape_schroedinger_discrete(total_time_steps,
                                     costs, total_time, H0, H_controls,
                                     initial_states,
-                                    mode='AG', tol=1e-8)
+                                    mode='AG', tol=1e-2)
 
     return result
 
