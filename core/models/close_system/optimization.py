@@ -13,7 +13,8 @@ import autograd.numpy as anp
 from functools import partial
 import warnings
 warnings.simplefilter("ignore", UserWarning)
-
+import os
+os.environ["NUMEXPR_NUM_THREADS"] = "1"
 
 settings.MULTIPROC = "pathos"
 
@@ -219,7 +220,7 @@ def close_evolution_ag_paral(controls, sys_para):
     if sys_para.state_transfer is True:
         n = 1
     else:
-        n = 1
+        n = multiprocessing.cpu_count()
     map_close_evolution_ag = partial(close_evolution_ag, controls, sys_para)
     map_multiprocessing = get_map_method(n)
     sys_para.state_packages = list(map_multiprocessing(map_close_evolution_ag,sys_para.state_packages))
