@@ -1,0 +1,10 @@
+autograd
+filelock
+h5py
+matplotlib
+numba
+numpy
+qutip
+scipy
+scqubits
+pathos

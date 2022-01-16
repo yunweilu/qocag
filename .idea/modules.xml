@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/qoc3.0.iml" filepath="$PROJECT_DIR$/.idea/qoc3.0.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/qoc_ag.iml" filepath="$PROJECT_DIR$/.idea/qoc_ag.iml" />
     </modules>
   </component>
 </project>

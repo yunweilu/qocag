@@ -5,7 +5,7 @@ setup.py - a module to allow package installation
 from distutils.core import setup
 
 
-NAME = "qoc3.0"
+NAME = "qoc_ag"
 VERSION = "0.1"
 DEPENDENCIES = [
     "autograd",
