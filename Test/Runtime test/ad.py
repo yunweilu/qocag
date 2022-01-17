@@ -71,7 +71,7 @@ def simulation(q_number):
     initial_states=get_initial(q_number)
     Target=Had(2,q_number)
     total_time=2*q_number
-    total_time_steps=20*q_number
+    total_time_steps=50*q_number
     costs = [TargetStateInfidelity(Target,cost_multiplier=1)]
 
     grape_schroedinger_discrete(total_time_steps,
