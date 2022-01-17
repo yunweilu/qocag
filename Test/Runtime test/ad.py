@@ -77,7 +77,7 @@ def simulation(q_number):
     grape_schroedinger_discrete(total_time_steps,
                                     costs, total_time, H0, H_controls,
                                     initial_states,
-                                    mode='AD', tol=1e-3)
+                                    mode='AD', tol=1e-3,max_iteration_num=1)
 
 
 simulation(7)
