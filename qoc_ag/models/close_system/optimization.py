@@ -4,7 +4,7 @@ from qoc_ag.math.initialization import initialize_controls
 from qoc_ag.math.common import get_H_total
 from qoc_ag.math.autogradutil import value_and_grad
 import numpy as np
-from jax.config import config
+#from jax.config import config
 from qoc_ag.math import expmat_vec_mul, expmat_vec_mul_ad,expm_pade
 import scqubits.settings as settings
 from scqubits.utils.cpu_switch import get_map_method
@@ -18,7 +18,7 @@ os.environ["NUMEXPR_NUM_THREADS"] = "1"
 
 settings.MULTIPROC = "pathos"
 
-config.update("jax_enable_x64", True)
+#config.update("jax_enable_x64", True)
 
 
 # Default float type in Jax is float32.
