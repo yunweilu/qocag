@@ -1,6 +1,4 @@
-import numpy as np
 import autograd.numpy as anp
-import numpy as np
 def get_H_total(controls,H_controls,H0,time_step):
     H_total=H0
     for control,H_control in zip(controls,H_controls):

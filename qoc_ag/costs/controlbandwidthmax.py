@@ -3,60 +3,45 @@ controlbandwidthmax.py - This module defines a cost function that penalizes all
 control frequencies above a specified maximum.
 """
 import autograd.numpy as anp
+from numpy import ndarray
+
 class ControlBandwidthMax():
     """
     This cost penalizes control frequencies above a set maximum.
 
-    Fields:
-    max_bandwidths :: ndarray (control_num) - This array contains the maximum allowed bandwidth of each control.
-    control_num
-    freqs :: ndarray (total_time_steps) - This array contains the frequencies of each of the controls.
-    name
-    requires_step_evaluation
-    
-    Example Usage:
-    control_num = 1
-    total_time = 10 #ns
-    total_time_steps = 1000
-    MAX_BANDWIDTH_0 = 0.4 # GHz
-    MAX_BANDWIDTHS = np.array((MAX_BANDWIDTH_0,))
-    COSTS = [ControlBandwidthMax(control_num, total_time_steps,
-                                 total_time, MAX_BANDWIDTHS)]
+    Parameters
+    ----------
+    control_num:
+        Number of control Hamiltonians
+    total_time_steps
+    cost_multiplier:
+        Weight factor of the cost function; expected < 1
+    max_bandwidths:
+        This array contains the maximum allowed bandwidth of each control.
     """
     name = "control_bandwidth_max"
     requires_step_evaluation = False
 
-    def __init__(self, control_num,
-                 total_time_steps, evolution_time,
-                 max_bandwidths,
-                 cost_multiplier=1.,):
-        """
-        See class fields for arguments not listed here.
-
-        Arguments:
-        control_num
-        total_time_steps
-        evolution_time
-        """
-        self.cost_multiplier=cost_multiplier
+    def __init__(self, control_num: int,
+                 total_time_steps: int, evolution_time: float,
+                 max_bandwidths: ndarray,
+                 cost_multiplier: float = 1., ) -> None:
+        self.cost_multiplier = cost_multiplier
         self.max_bandwidths = max_bandwidths
         self.control_num = control_num
         dt = evolution_time / (total_time_steps - 1)
-        self.total_time_steps=total_time_steps
+        self.total_time_steps = total_time_steps
         self.freqs = anp.fft.fftfreq(total_time_steps, d=dt)
-        self.type="control_explicitly_related"
+        self.type = "control_explicitly_related"
 
-    def cost(self, controls):
+    def cost(self, controls: ndarray) -> float:
         """
         Compute the penalty.
 
-        Arguments:
-        controls
-        states
-        system_eval_step
-
-        Returns:
-        cost
+        Parameters
+        ----------
+        controls:
+            Every control amplitude. Shape is (control_num, toltal_time_steps)
         """
         cost = 0
         # Iterate over the controls, penalize each control that has
@@ -67,12 +52,11 @@ class ControlBandwidthMax():
             penalty_freq_indices = anp.nonzero(self.freqs >= max_bandwidth)[0]
             penalized_ffts = control_fft_sq[penalty_freq_indices]
             penalty = anp.sum(penalized_ffts)
-            if penalty<1e-4:
-                penalty_normalized=0
+            if penalty < 1e-4:
+                penalty_normalized = 0
             else:
-                penalty_normalized = penalty-1e-4 / penalty
+                penalty_normalized = penalty - 1e-4 / penalty
             cost = cost + penalty_normalized
         cost_normalized = cost / self.control_num
 
         return cost_normalized * self.cost_multiplier
-

@@ -3,37 +3,31 @@ controlnorm.py - This module defines a cost function that penalizes
 the value of the norm of the control parameters.
 """
 import autograd.numpy as anp
+from numpy import ndarray
 class ControlNorm():
     """
-    This cost penalizes the value of the norm of the control parameters.
+    This cost penalizes control frequencies above a set maximum.
 
-    Fields:
-    control_weights :: ndarray (total_time_steps x control_num)
-        - These weights, each of which should be no greater than 1,
-        represent the factor by which each control's magnitude is penalized.
-        If no weights are specified, each control's magnitude is penalized
-        equally.
-    controls_size
-    cost_multiplier
-    max_control_norms
-    name
-    requires_step_evaluation
+    Parameters
+    ----------
+    control_num:
+        Number of control Hamiltonians
+    total_time_steps
+    cost_multiplier:
+        Weight factor of the cost function; expected < 1
+    max_bandwidths:
+        This array contains the maximum allowed bandwidth of each control.
+    control_weights:
+        Weight factor for each control amplitude
     """
     name = "control_norm"
     requires_step_evaluation = False
 
-    def __init__(self, control_num,
-                 total_time_steps,
-                 control_weights=None,
-                 cost_multiplier=1.,
-                 max_control_norms=None,):
-        """
-        See class fields for arguments not listed here.
+    def __init__(self, control_num: int,
+                 total_time_steps: int,
+                 cost_multiplier: float = 1.,
+                 max_control_norms: ndarray = None, control_weights: ndarray = None) -> None:
 
-        Arguments:
-        control_num
-        total_time_steps
-        """
         self.cost_multiplier=cost_multiplier
         self.control_weights = control_weights
         self.controls_size = total_time_steps * control_num
@@ -41,19 +35,15 @@ class ControlNorm():
         self.total_time_steps=total_time_steps
         self.type="control_explicitly_related"
     
-    def cost(self, controls):
+    def cost(self, controls: ndarray) -> float:
         """
         Compute the penalty.
 
-        Arguments:
-        controls
-        states
-        system_eval_step
-
-        Returns:
-        cost
+        Parameters
+        ----------
+        controls:
+            Every control amplitude. Shape is (control_num, toltal_time_steps)
         """
-        # Normalize the controls.
         cost_normalized=0
         if self.max_control_norms==None:
         # Weight the controls.
