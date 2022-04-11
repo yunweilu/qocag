@@ -1,5 +1,6 @@
 """
-autogutil.py - This module provides utilities for interfacing with autograd.
+autogutil.py - This module provides utilities for interfacing with autograd. grads function in autograd just returns
+               gradients. This can return both cost values and gradients.
 """
 
 from autograd.core import make_vjp as _make_vjp

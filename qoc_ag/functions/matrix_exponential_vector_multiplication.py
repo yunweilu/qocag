@@ -1,11 +1,8 @@
 """
 Action of matrix exponential and action of propagator derivative on a vector or a set of basis
 """
-
-import numpy as np
 import scipy.sparse.linalg
 from scipy.sparse import bmat, isspmatrix
-import autograd.numpy as anp
 
 def expmat_der_vec_mul(A, E, tol, state):
     """
@@ -51,17 +48,6 @@ def one_norm(A):
     else:
         return np.linalg.norm(A, 1)
 
-def one_norm_ad(A):
-    """
-    Used for jax.
-    Args:
-    A :: numpy.ndarray - matrix or vector
-    Returns:
-    one norm of A
-    """
-
-    return np.linalg.norm(A, 1)
-
 def trace(A):
     """
     Args:
@@ -73,17 +59,6 @@ def trace(A):
         return A.diagonal().sum()
     else:
         return np.trace(A)
-
-def trace_ad(A):
-    """
-    Used for jax.
-    Args:
-    A :: numpy.ndarray - matrix
-    Returns:
-    trace of A
-    """
-    return anp.trace(A)
-
 
 def ident_like(A):
     """
@@ -98,15 +73,6 @@ def ident_like(A):
     else:
         return np.eye(A.shape[0], A.shape[1], dtype=A.dtype)
 
-def ident_like_ad(A):
-    """
-    Used for jax.
-    Args:
-    A :: numpy.ndarray - matrix
-    Returns:
-    Identity matrix which has same dimension as A
-    """
-    return anp.eye(A.shape[0], A.shape[1], dtype=A.dtype)
 
 def get_s(A,tol):
     """
@@ -133,34 +99,6 @@ def get_s(A,tol):
             break
         s = s + 1
     return s
-
-def get_s_ad(A,tol):
-    """
-    Determine s in scaling and squaring. Used for jax.
-    Args:
-    A :: numpy.ndarray - matrix
-    tol :: numpy.float64 - expected error
-    Returns:
-    s :: int
-    """
-    s = 1
-    while (1):
-        tol_power = anp.ceil(anp.log10(tol))
-        norm_A = one_norm_ad(A) / s
-        max_term_notation = anp.floor(norm_A)
-        max_term = 1
-        for i in range(1, anp.int32(max_term_notation)):
-            max_term = max_term * norm_A / i
-            max_power = anp.ceil(anp.log10(max_term))
-            if max_power > 30:
-                break
-        max_power = anp.ceil(anp.log10(max_term))
-        if max_power - 16 <= tol_power:
-            break
-        s = s + 1
-    return s
-
-
 
 def expmat_vec_mul(A, b, tol=None):
     """
@@ -209,56 +147,6 @@ def expmat_vec_mul(A, b, tol=None):
         f = eta * f
         b = f
     return f
-
-
-def expmat_vec_mul_ad(A, b, tol=None):
-    """
-    Compute the exponential matrix and vector multiplication e^(A) B. Used for jax.
-    Args:
-    A :: numpy.ndarray - matrix
-    b :: numpy.ndarray - vector or a set of basis vectors
-    tol :: numpy.float64 - expected error
-    Returns:
-    f :: numpy.ndarray - Approximation of e^(A) b
-    """
-    ident = ident_like_ad(A)
-    n = A.shape[0]
-    mu = trace_ad(A) / float(n)
-    # Why mu? http://eprints.ma.man.ac.uk/1591/, section 3.1
-    A = A - mu * ident
-    if tol is None:
-        tol = 1e-16
-    s = get_s_ad(A,tol)
-    f = b
-    j = 0
-    while (1):
-        eta = anp.exp(mu / float(s))
-        coeff = s * (j + 1)
-        b = anp.matmul(A,b) / coeff
-        c2 = one_norm_ad(b)
-        f = f + b
-        total_norm = one_norm_ad(f)
-        if c2 / total_norm < tol:
-            m = j + 1
-            break
-        j = j + 1
-    f = eta * f
-    b = f
-    for i in range(1, int(s)):
-        eta = anp.exp(mu / float(s))
-        for j in range(m):
-            coeff = s * (j + 1)
-            b = anp.matmul(A,b)  / coeff
-            c2 = one_norm_ad(b)
-            f = f+ b
-            total_norm = one_norm_ad(f)
-            if c2 / total_norm < tol:
-                m = j + 1
-                break
-        f = eta * f
-        b = f
-    return f
-
 
 """
 expm.py - a module for all things e^M

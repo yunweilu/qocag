@@ -3,9 +3,9 @@ targetstateinfidelity.py - This module defines a cost function that
 penalizes the infidelity of an evolved state and a target state.
 """
 import numpy as np
-from qoc_ag.math.common import conjugate_transpose_ad
+from qoc_ag.functions.common import conjugate_transpose_ad
 import autograd.numpy as anp
-from qoc_ag.math import expmat_der_vec_mul
+from qoc_ag.functions import expmat_der_vec_mul
 
 
 class TargetStateInfidelity():
