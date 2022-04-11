@@ -18,4 +18,4 @@ initial_states=np.array([1,0])
 grape_schroedinger_discrete(total_time_steps,
                                 costs, total_time, H0, H_controls,
                                 initial_states,
-                                optimizer=Adam(), mode='AG', tol=1e-16)
+                                optimizer=Adam(learning_rate=0.1), mode='AG', tol=1e-16)

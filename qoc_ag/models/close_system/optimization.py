@@ -116,9 +116,9 @@ def grape_schroedinger_discrete(total_time_steps,
     initial_controls = initialize_controls(total_time_steps, initial_controls, sys_para.max_control_norms)
     initial_controls = np.ravel(initial_controls)
     # turn to optimizer format which is 1darray
-    sys_para.optimizer.run(cost_only, sys_para.max_iteration_num, initial_controls,
+    pulse = sys_para.optimizer.run(cost_only, sys_para.max_iteration_num, initial_controls,
                            cost_gradients, args=(sys_para,))
-
+    return pulse
 
 def cost_only(controls, sys_para):
     control_num = sys_para.control_num

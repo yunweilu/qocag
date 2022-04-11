@@ -103,6 +103,7 @@ class Adam(object):
             if terminate:
                 break
             params = self.update(grads, params)
+        return params
 
 
     def update(self, grads, params):
