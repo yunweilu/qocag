@@ -1,5 +1,5 @@
 """
-qoc_ag - this module is core module of the package.
+qoc_ag - this module==core module of the package.
 """
 from .models.close_system.optimization import grape_schroedinger_discrete
 from .optimizers import Adam, SGD, LBFGSB

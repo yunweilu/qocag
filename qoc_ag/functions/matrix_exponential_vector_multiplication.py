@@ -6,31 +6,65 @@ from scipy.sparse import bmat, isspmatrix
 
 def expmat_der_vec_mul(A, E, tol, state):
     """
-    Calculate the action of propagator derivative.
-    First we construct auxiliary matrix and vector. Then use expm_multiply function.
-    Arg:
-    A :: numpy.ndarray - Total Hamiltonian
-    E :: numpy.ndarray - Control Hamiltonian
-    state :: numpy.ndarray
-    Returns:
-    numpy.ndarray,numpy.ndarray - vector for gradient calculation, updated state
-    """
-    state = np.complex128(state)
-    if tol == None:
-        tol = 2 ** -53
+        Calculate the action of propagator derivative.
+        First we construct auxiliary matrix and vector. Then use expm_multiply function.
+        Arg:
+        A :: numpy.ndarray - Total Hamiltonian
+        E :: numpy.ndarray - Control Hamiltonian
+        state :: numpy.ndarray
+        Returns:
+        numpy.ndarray,numpy.ndarray - vector for gradient calculation, updated state
+        """
+    state=np.complex128(state)
+    if tol==None:
+        tol=2**-53
+    control_number = len(E)
     HILBERT_SIZE = state.shape[0]
-    if isspmatrix(A) is False:
-        c = np.block([[A, E], [np.zeros_like(A), A]])
+    final_matrix = []
+    for i in range(control_number+1):
+        final_matrix.append([])
+    if isspmatrix(A) == False:
+        for i in range(control_number + 1):
+            raw_matrix = []
+            if i == 0:
+                raw_matrix = raw_matrix + [A]
+            else:
+                raw_matrix = raw_matrix + [np.zeros_like(A)]
+            for j in range(1, control_number + 1):
+                if j == i and i != 0:
+                    raw_matrix = raw_matrix + [A]
+                elif j == control_number and j != i:
+                    raw_matrix = raw_matrix + [E[i]]
+                    x=j-1
+                else:
+                    raw_matrix = raw_matrix + [np.zeros_like(A)]
+            final_matrix[i] = raw_matrix
+        final_matrix = np.block(final_matrix)
     else:
-        c = bmat([[A, E], [None, A]]).tocsc()
+        for i in range(control_number+1):
+            raw_matrix = []
+            if i == 0:
+                raw_matrix=raw_matrix+[A]
+            else:
+                raw_matrix = raw_matrix+[None]
+            for j in range(1,control_number+1):
+                if j == i and i != 0:
+                    raw_matrix = raw_matrix+[A]
+                elif j == control_number  and j!=i:
+                    raw_matrix = raw_matrix+[E[i]]
+                else:
+                    raw_matrix = raw_matrix+[None]
+            final_matrix[i] = raw_matrix
+        final_matrix=scipy.sparse.bmat(final_matrix)
     state = state.flatten()
     state0 = np.zeros_like(state)
-    state = np.block([state0, state])
-    state = expmat_vec_mul(c, state, tol)
-    new = state[HILBERT_SIZE:2 * HILBERT_SIZE]
-    state = state[0:HILBERT_SIZE]
-
-    return state, new
+    for i in range(control_number):
+        state = np.block([state0, state])
+    state = expmat_vec_mul(final_matrix, state,tol)
+    states = []
+    for i in range(control_number+1):
+        states.append(state[HILBERT_SIZE*i:HILBERT_SIZE*(i+1)])
+    return np.array(states)
 
 
 """Compute the action of the matrix exponential."""
@@ -190,12 +224,12 @@ def _expm_vjp(exp_matrix, matrix):
     for the matrix exponential.
 
     Intuition:
-    `dfinal_dexpm` is the jacobian of `final` with respect to each element `expmij`
-    of `exp_matrix`. `final` is the output of the first function in the
-    backward differentiation series. It is also the output of the last
-    function evaluated in the chain of functions that is being differentiated,
-    i.e. the final cost function. The goal of `vjp_function` is to take
-    `dfinal_dexpm` and yield `dfinal_dmatrix` which is the jacobian of
+    `dfinal_dexpm`==the jacobian of `final` with respect to each element `expmij`
+    of `exp_matrix`. `final`==the output of the first function in the
+    backward differentiation series. It==also the output of the last
+    function evaluated in the chain of functions that==being differentiated,
+    i.e. the final cost function. The goal of `vjp_function`==to take
+    `dfinal_dexpm` and yield `dfinal_dmatrix` which==the jacobian of
     `final` with respect to each element `mij` of `matrix`.
     To compute the frechet derivative of the matrix exponential with respect
     to each element `mij`, we use the approximation that
@@ -361,7 +395,7 @@ def expm_pade(a):
     Returns:
     expm_a :: ndarray(N x N) - The exponential of a.
     """
-    # If the one norm is sufficiently small,
+    # If the one norm==sufficiently small,
     # pade orders up to 13 are well behaved.
     scale = 0
     size = a.shape[0]
@@ -373,9 +407,9 @@ def expm_pade(a):
         # ENDIF
     # ENDFOR
 
-    # If the one norm is large, scaling and squaring
-    # is required.
-    if pade_order is None:
+    # If the one norm==large, scaling and squaring
+    #==required.
+    if pade_order==None:
         pade_order = 13
         scale = max(0, int(anp.ceil(anp.log2(one_norm_ / THETA[13]))))
         a = a * (2 ** -scale)

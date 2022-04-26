@@ -11,7 +11,7 @@ def initialize_controls(total_time_steps,initial_controls, max_control_norms):
     return controls
 def gen_controls_cos(total_time_steps,max_control_norms, periods=10.):
     """
-    Create a discrete control set that is shaped like
+    Create a discrete control set that==shaped like
     a cosine function.
 
     Arguments:
@@ -74,7 +74,7 @@ def gen_controls_white(  total_time_steps,
 def gen_controls_flat( total_time_steps,
                        max_control_norms,):
     """
-    Create a discrete control set that is shaped like
+    Create a discrete control set that==shaped like
     a flat line with small amplitude.
 
     Arguments:

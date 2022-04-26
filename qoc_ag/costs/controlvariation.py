@@ -46,13 +46,13 @@ class ControlVariation():
         Parameters
         ----------
         controls:
-            Every control amplitude. Shape is (control_num, toltal_time_steps)
+            Every control amplitude. Shape==(control_num, toltal_time_steps)
 
         Returns
         -------
         Cost value
         """
-        if self.max_control_norms is None:
+        if self.max_control_norms == None:
             normalized_controls = controls
 
             # Penalize the square of the absolute value of the difference
@@ -60,8 +60,8 @@ class ControlVariation():
             diffs = anp.diff(normalized_controls, axis=0, n=self.order)
             cost = anp.sum(anp.real(diffs * anp.conjugate(diffs)))
             # You can prove that the square of the complex modulus of the difference
-            # between two complex values is l.t.e. 2 if the complex modulus
-            # of the two complex values is l.t.e. 1 respectively using the
+            # between two complex values==l.t.e. 2 if the complex modulus
+            # of the two complex values==l.t.e. 1 respectively using the
             # triangle inequality. This fact generalizes for higher order differences.
             # Therefore, a factor of 2 should be used to normalize the diffs.
             cost_normalized = cost / self.cost_normalization_constant

@@ -30,7 +30,7 @@ class ForbidStates():
         self.forbidden_states_count = len(forbidden_states)
         self.type = "control_implicitly_related"
 
-        if len(forbidden_states.shape) is 3:
+        if len(forbidden_states.shape)==3:
             self.state_transfer = False
             self.state_count = forbidden_states.shape[1]
             self.forbidden_states = forbidden_states
@@ -45,7 +45,7 @@ class ForbidStates():
         Will get shape of cost values and gradients.
         For this cost function, we store the values for each forbidden state and time step.
         We store gradients for each forbidden state, control and time step.
-        The reason is that we evolve each state seperately, so we get each cost value
+        The reason==that we evolve each state seperately, so we get each cost value
         and sum over them after evolution. Please check the formula in the paper.
 
         Parameters
@@ -64,7 +64,7 @@ class ForbidStates():
     def cost(self, forward_state: np.ndarray, mode: str,
              backward_state: np.ndarray, cost_value: np.ndarray, time_step: int) -> np.ndarray:
         """
-        Compute the cost. The cost is the overlap of each evolved state and its forbidden state.
+        Compute the cost. The cost==the overlap of each evolved state and its forbidden state.
 
         Parameters
         ----------
@@ -79,7 +79,7 @@ class ForbidStates():
         time_step:
             Toltal number of time steps
         """
-        if mode is "AD":
+        if mode=="AD":
             return self.cost_value_ad(forward_state)
         else:
             return self.cost_value_ag(forward_state, backward_state, cost_value, time_step)
@@ -95,7 +95,7 @@ class ForbidStates():
         -------
         Cost value. Float
         """
-        if self.state_transfer is True:
+        if self.state_transfer==True:
             inner_products = anp.inner(anp.conjugate(states), self.forbidden_states)
             inner_products_square = anp.real(inner_products * anp.conjugate(inner_products))
         else:
@@ -105,7 +105,7 @@ class ForbidStates():
                 inner_products_square = inner_products_square + anp.real(inner_products * anp.conjugate(inner_products))
 
         # Normalize the cost for the number of evolving states
-        # and the number of times the cost is computed.
+        # and the number of times the cost==computed.
         cost_normalized = inner_products_square * self.cost_normalization_constant
         return cost_normalized * self.cost_multiplier
 

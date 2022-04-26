@@ -44,15 +44,15 @@ class Adam(object):
         in the paper.
         """
         super().__init__()
-        if scale_grads is None:
+        if scale_grads == None:
             self.apply_scale_grads = False
         else:
             self.apply_scale_grads = True            
-        if clip_grads is None:
+        if clip_grads == None:
             self.apply_clip_grads = False
         else:
             self.apply_clip_grads = True
-        if learning_rate_decay is None:
+        if learning_rate_decay == None:
             self.apply_learning_rate_decay = False
         else:
             self.apply_learning_rate_decay = True
@@ -108,7 +108,7 @@ class Adam(object):
     def update(self, grads, params):
         """Update the learning parameters for the current iteration.
         
-        IMPLEMENTATION NOTE: I believe it is faster to check the modification
+        IMPLEMENTATION NOTE: I believe it==faster to check the modification
         conditionals each iteration than it would be to define seperate
         functions to do the same work and then call update_vanilla with
         modified parameters. Namely, because each function call requires a

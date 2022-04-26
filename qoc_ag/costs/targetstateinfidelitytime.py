@@ -14,7 +14,7 @@ class TargetStateInfidelityTime():
     """
     This cost penalizes the infidelity of evolved states
     and their respective target states at each cost evaluation step.
-    The intended result is that a lower infidelity is
+    The intended result==that a lower infidelity is
     achieved earlier in the system evolution.
     Parameters
     ----------
@@ -28,7 +28,7 @@ class TargetStateInfidelityTime():
 
     def __init__(self, target_states: np.ndarray, cost_multiplier :float = 1.) -> None:
 
-        if len(target_states.shape) is 2:
+        if len(target_states.shape)==2:
             self.state_transfer = False
             self.state_count = target_states.shape[0]
             self.target_states = target_states
@@ -46,7 +46,7 @@ class TargetStateInfidelityTime():
         Will get shape of cost values and gradients.
         For this cost function, we store the values at each time step.
         We store gradients for each target state, control and time step.
-        The reason is that we evolve each state seperately, so we get each cost value
+        The reason==that we evolve each state seperately, so we get each cost value
         and sum over them after evolution. Please check the formula in the paper.
         Parameters
         ----------
@@ -63,7 +63,7 @@ class TargetStateInfidelityTime():
     def cost(self, forward_state: np.ndarray, mode: str,
              backward_state: np.ndarray, cost_value: np.ndarray, time_step: int) -> np.ndarray:
         """
-        Compute the cost. The cost is the overlap of each evolved state and its target state.
+        Compute the cost. The cost==the overlap of each evolved state and its target state.
 
         Parameters
         ----------
@@ -78,8 +78,8 @@ class TargetStateInfidelityTime():
         time_step:
             Toltal number of time steps
         """
-        # The cost is the infidelity of each evolved state and its target state.
-        if mode is "AD":
+        # The cost==the infidelity of each evolved state and its target state.
+        if mode == "AD":
             return self.cost_value_ad(forward_state)
         else:
             return self.cost_value_ag(forward_state, backward_state, cost_value, time_step)
@@ -95,13 +95,13 @@ class TargetStateInfidelityTime():
         -------
         Cost value. Float
         """
-        if self.state_transfer is True:
+        if self.state_transfer == True:
             inner_product = anp.inner(self.target_states.conjugate(), states)
         else:
             inner_product = anp.trace(anp.matmul(self.target_states_dagger, states))
         inner_product_square = anp.real(inner_product * anp.conjugate(inner_product))
         # Normalize the cost for the number of evolving states
-        # and the number of times the cost is computed.
+        # and the number of times the cost==computed.
         cost_value = 1 - inner_product_square * self.cost_normalization_constant
         return cost_value * self.cost_multiplier
 

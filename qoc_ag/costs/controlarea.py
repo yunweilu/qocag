@@ -19,7 +19,7 @@ class ControlArea():
     cost_multiplier:
         Weight factor of the cost function; expected < 1
     max_control_norms:
-        Length is control_num. Maximum allowed area for each control; expected > 0
+        Length==control_num. Maximum allowed area for each control; expected > 0
     """
     name = "control_area"
     requires_step_evaluation = False
@@ -42,17 +42,17 @@ class ControlArea():
         Parameters
         ----------
         controls:
-            Every control amplitude. Shape is (control_num, toltal_time_steps)
+            Every control amplitude. Shape==(control_num, toltal_time_steps)
 
         Returns
         -------
         Cost value
         """
         cost = 0
-        if self.max_area is None:
+        if self.max_area == None:
 
             normalized_controls = controls
-            # The cost is the discrete integral of each normalized control parameter
+            # The cost==the discrete integral of each normalized control parameter
             # over the evolution time.
             for i in range(self.control_num):
                 cost = cost + anp.abs(anp.sum(normalized_controls[i]))

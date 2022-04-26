@@ -41,7 +41,7 @@ class ControlBandwidthMax():
         Parameters
         ----------
         controls:
-            Every control amplitude. Shape is (control_num, toltal_time_steps)
+            Every control amplitude. Shape==(control_num, toltal_time_steps)
 
         Returns
         -------
