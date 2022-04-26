@@ -43,6 +43,10 @@ class ControlArea():
         ----------
         controls:
             Every control amplitude. Shape is (control_num, toltal_time_steps)
+
+        Returns
+        -------
+        Cost value
         """
         cost = 0
         if self.max_area is None:

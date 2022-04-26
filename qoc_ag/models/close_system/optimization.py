@@ -5,7 +5,7 @@ from qoc_ag.functions.common import get_H_total
 from qoc_ag.functions.autogradutil import value_and_grad
 import numpy as np
 #from jax.config import config
-from qoc_ag.functions import expmat_vec_mul, expmat_vec_mul_ad,expm_pade
+from qoc_ag.functions import expmat_vec_mul, expm_pade
 import scqubits.settings as settings
 from scqubits.utils.cpu_switch import get_map_method
 import multiprocessing

@@ -1,9 +1,11 @@
 import numpy as np
 def initialize_controls(total_time_steps,initial_controls, max_control_norms):
-    if initial_controls is not None:
-        if initial_controls.dtype is np.complex128 or np.complex64 or np.complex256:
+    if type(initial_controls) == np.array or type(initial_controls) == list:
+        if initial_controls[0][0].dtype == np.complex:
             raise ValueError("The program does not support complex control so far. Please use np.float type for control amplitudes")
-    if initial_controls is None:
+        else:
+            controls=initial_controls
+    else:
         controls = gen_controls_flat( total_time_steps,max_control_norms)
 
     return controls

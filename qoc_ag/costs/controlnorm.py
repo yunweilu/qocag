@@ -43,6 +43,10 @@ class ControlNorm():
         ----------
         controls:
             Every control amplitude. Shape is (control_num, toltal_time_steps)
+
+        Returns
+        -------
+        Cost value
         """
         cost_normalized=0
         if self.max_control_norms==None:

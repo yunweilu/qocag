@@ -17,7 +17,7 @@ class system_parameters():
                  save_file_path,
                  save_intermediate_states,
                  save_iteration_step, mode, tol):
-        self.H_controls = H_controls
+        self.H_controls = np.array(H_controls)
         self.control_num = len(H_controls)
         self.total_time_steps = total_time_steps
         self.costs = costs
