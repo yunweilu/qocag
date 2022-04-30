@@ -1,5 +1,5 @@
 import numpy as np
-
+import copy
 
 class system_parameters():
     final_states = None
@@ -20,7 +20,7 @@ class system_parameters():
         self.H_controls = H_controls
         self.control_num = len(H_controls)
         self.total_time_steps = total_time_steps
-        self.costs = costs
+        self.costs = copy.deepcopy(costs)
         self.total_time = total_time
         self.H0 = H0
         self.impose_control_conditions = impose_control_conditions

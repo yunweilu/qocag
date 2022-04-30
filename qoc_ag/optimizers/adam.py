@@ -79,7 +79,7 @@ class Adam(object):
     
 
     def run(self, function, iteration_count,
-            initial_params, jacobian, args=()):
+            initial_params, jacobian, args=(), **kwargs):
         """
         Run an Adam optimization series.
         Args:
@@ -103,6 +103,7 @@ class Adam(object):
             if terminate:
                 break
             params = self.update(grads, params)
+            print(function(params, *args))
         return params
 
 

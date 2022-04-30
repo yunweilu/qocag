@@ -35,7 +35,7 @@ def grape_schroedinger_discrete(total_time_steps,
                                 optimizer=Adam(),
                                 save_file_path=None,
                                 save_intermediate_states=False,
-                                save_iteration_step=0, mode='AD', tol=1e-8):
+                                save_iteration_step=0, mode='AD', tol=1e-8, **kwargs):
     """
     This method optimizes the evolution of a set of states under the schroedinger
     equation for time-discrete control parameters.
@@ -118,7 +118,7 @@ def grape_schroedinger_discrete(total_time_steps,
     initial_controls = np.ravel(initial_controls)
     # turn to optimizer format which is 1darray
     pulse = sys_para.optimizer.run(cost_only, sys_para.max_iteration_num, initial_controls,
-                           cost_gradients, args=(sys_para,))
+                           cost_gradients, args=(sys_para,), hamiltonian=H0, H_controls=H_controls, time_step_interval=total_time/total_time_steps, init_states=initial_states, **kwargs)
     return pulse
 
 def cost_only(controls, sys_para):
@@ -169,7 +169,7 @@ def cost_gradients(controls, sys_para):
         cost_value = cost_value_ad_part + cost_value_ag_part
         grads = grads_ad_part + grads_ag_part
     #   if sys_para.mode is "AG":
-    print(cost_value)
+    # print(cost_value)
     grads = np.ravel(grads)
     # turn to optimizer format which is 1darray
     if cost_value <= sys_para.min_error:
