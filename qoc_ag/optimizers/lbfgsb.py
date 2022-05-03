@@ -49,6 +49,10 @@ class LBFGSB(object):
         import matplotlib.pyplot as plt
         import qutip as qt
 
+        # plot setting
+        detail_update_period = 20
+        state_evolution_samples = 4
+
         # prepare parameters
         hamiltonian = qt.Qobj(kwargs["hamiltonian"])
         H_controls = kwargs["H_controls"]
@@ -114,52 +118,70 @@ class LBFGSB(object):
             ax1.set_xlim(-0.02 * plot_round_length, 1.02 * plot_round_length)
             ax1.set_ylim(-0.02, 1.02)
 
-            if (len(error_record) - 1) % 10 == 0:
+            # add special fid plot to ax1 and final states in ax2
+            if (len(error_record) - 1) % detail_update_period == 0:
                 # calculate state transfer (ax1 and ax2)
                 special_step.append(len(error_record) - 1)
                 ax2.clear()
 
                 qt_operators = [qt.Qobj(op) for op in H_controls]
 
-                unitary = 1
+                current_states = qt.Qobj(init_states.copy().transpose()) # Now they are column vectors
+                sample_time_steps = np.round(np.linspace(0, pulse.shape[1] - 1, state_evolution_samples + 1)).astype(int)
+                remain_sample_steps = sample_time_steps[1:].copy()
+                sampled_states = []
                 for t_i in range(pulse.shape[1]):
                     hamil = hamiltonian.copy()
                     for i in range(pulse_num):
                         hamil = hamil + pulse[i, t_i] * qt_operators[i]
 
-                    unitary = (-1j * time_step_interval * hamil).expm() * unitary
+                    current_states = (-1j * time_step_interval * hamil).expm() * current_states
+                
+                    if t_i == remain_sample_steps[0]:
+                        sampled_states.append(current_states.full().copy())
+                        remain_sample_steps = np.delete(remain_sample_steps, [0])
 
-                result_unitary = qt.Qobj(unitary, dims=[dims, dims])
-
-                target_results = []
-                target_fid = []
-
-                for i in range(len(qt_init)):
-                    target_results.append(result_unitary * qt_init[i])
-                    target_fid.append(np.abs((target_results[-1].dag() * qt_target[i]).data[0, 0]))
+                target_fid = [np.abs((qt_target[i].dag() * sampled_states[-1][:, i:i+1])[0, 0]) for i in range(len(qt_init))]
 
                 # append fidelity evolution
                 special_fid_record.append(target_fid)
                 fid_record_for_plot = np.array(special_fid_record)
 
                 # plot states in n basis
-                result_n_basis = []
-                for j in range(subsys_num):
-                    for i in range(target_num):
-                        idx = j * target_num + i
-                        plot_x = np.arange(len(target_n_basis[idx])) + np.sum(dims[:j])
-                        color = cmap(i)
-                        if subsys_num == 1:
-                            np_result = target_results[i].full().reshape(-1)
-                            result_n_basis.append(np_result.conj() * np_result)
-                        else:
-                            result_n_basis.append(np.diag(qt.ptrace(target_results[i], j).full()))
+                for sample_i in range(state_evolution_samples):
+                    result_n_basis = []
+                    
+                    if sample_i != state_evolution_samples-1:
+                        scatter_alpha = 0.3
+                        scatter_size = 5
+                    else:
+                        scatter_alpha = 0.3
+                        scatter_size = 50
 
-                        ax2.plot(plot_x, target_n_basis[idx].real, ls='--', color=color)
-                        if j == 0:
-                            ax2.scatter(plot_x, result_n_basis[idx].real, color=color, label=f"target state {i}")
-                        else:
-                            ax2.scatter(plot_x, result_n_basis[idx].real, color=color)
+                    for j in range(subsys_num):
+
+                        for i in range(target_num):
+
+                            idx = j * target_num + i
+                            plot_x = np.arange(len(target_n_basis[idx])) + np.sum(dims[:j])
+                            color = cmap(i)
+
+                            if subsys_num == 1:
+                                np_result = sampled_states[sample_i][:, i]
+                                result_n_basis.append(np_result.conj() * np_result)
+                            else:
+                                qt_target_result = qt.Qobj(sampled_states[sample_i][:, i], dims=[dims, np.ones_like(dims)])
+                                result_n_basis.append(np.diag(qt.ptrace(qt_target_result, j).full()))
+
+                            if sample_i == state_evolution_samples-1:
+                                ax2.plot(plot_x, target_n_basis[idx].real, ls='--', color=color, alpha=0.7)
+
+                            if j == 0 and sample_i == state_evolution_samples-1:
+                                scatter_label = f"target state {i}"
+                            else:
+                                scatter_label = None
+
+                            ax2.scatter(plot_x, result_n_basis[idx].real, color=color, label=scatter_label, alpha=scatter_alpha, s=scatter_size)
                 ax2.legend()
 
             fid_record_for_plot = np.array(special_fid_record)
