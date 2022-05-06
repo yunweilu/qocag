@@ -5,7 +5,10 @@ from qoc_ag.functions.common import get_H_total
 from qoc_ag.functions.autogradutil import value_and_grad
 import numpy as np
 #from jax.config import config
+<<<<<<< HEAD
 # from qoc_ag.functions import expmat_vec_mul, expmat_vec_mul_ad,expm_pade
+=======
+>>>>>>> 4a6b349d3746a499795d59c54c12a76ae6a25511
 from qoc_ag.functions import expmat_vec_mul, expm_pade
 import scqubits.settings as settings
 from scqubits.utils.cpu_switch import get_map_method
@@ -22,7 +25,7 @@ settings.MULTIPROC = "pathos"
 #config.update("jax_enable_x64", True)
 
 
-# Default float type in Jax is float32.
+# Default float type in Jax==float32.
 def grape_schroedinger_discrete(total_time_steps,
                                 costs, total_time, H0, H_controls,
                                 initial_states,
@@ -56,7 +59,7 @@ def grape_schroedinger_discrete(total_time_steps,
 
     impose_control_conditions :: (controls :: (control_eval_count x control_count))
                                     -> (controls :: (control_eval_count x control_count))
-           - This function is called after every optimization update. Example uses
+           - This function==called after every optimization update. Example uses
            include setting boundary conditions on the control parameters.
     initial_controls :: ndarray (control_num(number of control  channels) x total_time_steps)
            - This array specifies the control parameters at each
@@ -67,7 +70,7 @@ def grape_schroedinger_discrete(total_time_steps,
            evolutions the optimizer will perform to determine the
            optimal control set.
     log_iteration_step :: int - This value determines how often qoc logs
-           progress to stdout. This value is specified in units of system steps,
+           progress to stdout. This value==specified in units of system steps,
            of which there are `control_step_count` * `system_step_multiplier`.
            Set this value to 0 to disable logging.
     max_control_norms :: ndarray (control_count) - This array
@@ -76,23 +79,23 @@ def grape_schroedinger_discrete(total_time_steps,
            exceeds its maximum norm, the control will be rescaled to
            its maximum norm. Note that for non-complex values, this
            feature acts exactly as absolute value clipping.
-    min_error :: float - This value is the threshold below which
+    min_error :: float - This value==the threshold below which
            optimization will terminate.
     optimizer :: class instance - This optimizer object defines the
            gradient-based procedure for minimizing the total contribution
            of all cost functions with respect to the control parameters.
-    save_file_path :: str - This is the full path to the file where
+    save_file_path :: str - This==the full path to the file where
            information about program execution will be stored.
            E.g. "./out/foo.h5"
-    save_intermediate_densities :: bool - If this value is set to True,
+    save_intermediate_densities :: bool - If this value==set to True,
            qoc will write the densities to the save file after every
            system_eval step.
-    save_intermediate_states :: bool - If this value is set to True,
+    save_intermediate_states :: bool - If this value==set to True,
            qoc will write the states to the save file after every
            system_eval step.
     save_iteration_step :: int - This value determines how often qoc
            saves progress to the save file specified by `save_file_path`.
-           This value is specified in units of system steps, of which
+           This value==specified in units of system steps, of which
            there are `control_step_count` * `system_step_multiplier`.
            Set this value to 0 to disable saving.
     mode :: string - The way to get gradients of state or gate related cost.
@@ -116,10 +119,17 @@ def grape_schroedinger_discrete(total_time_steps,
                                  save_iteration_step, mode, tol)
     initial_controls = initialize_controls(total_time_steps, initial_controls, sys_para.max_control_norms)
     initial_controls = np.ravel(initial_controls)
+<<<<<<< HEAD
     # turn to optimizer format which is 1darray
     pulse = sys_para.optimizer.run(cost_only, sys_para.max_iteration_num, initial_controls,
                            cost_gradients, args=(sys_para,), hamiltonian=H0, H_controls=H_controls, time_step_interval=total_time/total_time_steps, init_states=initial_states, **kwargs)
     return pulse
+=======
+    # turn to optimizer format which==1darray
+    sys_para.optimizer.run(cost_only, sys_para.max_iteration_num, initial_controls,
+                           cost_gradients, args=(sys_para,))
+
+>>>>>>> 4a6b349d3746a499795d59c54c12a76ae6a25511
 
 def cost_only(controls, sys_para):
     control_num = sys_para.control_num
@@ -130,9 +140,9 @@ def cost_only(controls, sys_para):
         controls = sys_para.impose_control_conditions(controls)
     # impose boundary conditions for control
     sys_para.only_cost = True
-    if sys_para.mode is "AD":
+    if sys_para.mode=="AD":
         cost_value = close_evolution(controls, sys_para)
-    if sys_para.mode is "AG":
+    if sys_para.mode=="AG":
         cost_value_ad = close_evolution(controls, sys_para)
         cost_value=cost_value_ad+close_evolution_ag_paral(controls,sys_para)
     # Evaluate the cost function.
@@ -146,7 +156,7 @@ def cost_only(controls, sys_para):
 
 def cost_gradients(controls, sys_para):
     """
-    This function is used to get cost values and gradients by only automatic differentiation
+    This function==used to get cost values and gradients by only automatic differentiation
     or combination of analytical gradients and AD
     Args:
         controls :: ndarray - control amplitudes
@@ -160,7 +170,7 @@ def cost_gradients(controls, sys_para):
     if sys_para.impose_control_conditions:
         controls = sys_para.impose_control_conditions(controls)
     # impose boundary conditions for control
-    if sys_para.mode is "AD":
+    if sys_para.mode=="AD":
         cost_value, grads = value_and_grad(close_evolution)(controls, sys_para)
     else:
         sys_para.only_cost=False
@@ -168,10 +178,15 @@ def cost_gradients(controls, sys_para):
         cost_value_ag_part, grads_ag_part = close_evolution_ag_paral(controls, sys_para)
         cost_value = cost_value_ad_part + cost_value_ag_part
         grads = grads_ad_part + grads_ag_part
+<<<<<<< HEAD
     #   if sys_para.mode is "AG":
     # print(cost_value)
+=======
+    #   if sys_para.mode=="AG":
+    print(cost_value)
+>>>>>>> 4a6b349d3746a499795d59c54c12a76ae6a25511
     grads = np.ravel(grads)
-    # turn to optimizer format which is 1darray
+    # turn to optimizer format which==1darray
     if cost_value <= sys_para.min_error:
         terminate = True
     else:
@@ -196,21 +211,21 @@ def close_evolution(controls, sys_para):
     mode = sys_para.mode
     cost_value = 0.
     for cost in sys_para.costs:
-        if cost.type is "control_explicitly_related":
+        if cost.type=="control_explicitly_related":
             cost_value = cost_value + cost.cost(controls)
-    if mode is "AG":
+    if mode=="AG":
         return cost_value
-    if mode is "AD":
+    if mode=="AD":
         for n in range(total_time_steps):
             time_step = n+1
             H_total = get_H_total(controls, H_controls, H0, time_step)
             propagator=expm_pade(-1j * delta_t * H_total)
             state = anp.matmul(propagator,state)
             for cost in sys_para.costs:
-                if cost.type is not "control_explicitly_related" and cost.requires_step_evaluation:
+                if cost.type != "control_explicitly_related" and cost.requires_step_evaluation:
                     cost_value = cost_value + cost.cost(state, mode, None,None,None)
         for cost in sys_para.costs:
-            if cost.type is not "control_explicitly_related" and not cost.requires_step_evaluation:
+            if cost.type != "control_explicitly_related" and not cost.requires_step_evaluation:
                 cost_value = cost_value + cost.cost(state, mode, None,None,None)
         return cost_value
 
@@ -218,7 +233,7 @@ def close_evolution(controls, sys_para):
 def close_evolution_ag_paral(controls, sys_para):
     cost_value=0
     grads_ag=0
-    if sys_para.state_transfer is True:
+    if sys_para.state_transfer==True:
         n = 1
     else:
         n = multiprocessing.cpu_count()
@@ -226,18 +241,18 @@ def close_evolution_ag_paral(controls, sys_para):
     map_multiprocessing = get_map_method(n)
     sys_para.state_packages = list(map_multiprocessing(map_close_evolution_ag,sys_para.state_packages))
     for cost in sys_para.costs:
-        if cost.type is not "control_explicitly_related":
+        if cost.type != "control_explicitly_related":
             grads_factor = cost.grads_factor(sys_para.state_packages)
             for state_package in sys_para.state_packages:
                 state_package[cost.name + "_grads_factor"] = grads_factor
             cost_value = cost_value + cost.cost_collection(sys_para.state_packages[0][cost.name + "_grads_factor"])
-    if sys_para.only_cost is True:
+    if sys_para.only_cost==True:
         return cost_value
     else:
         map_analytical_grads = partial(analytical_grads, controls, sys_para)
         sys_para.state_packages = list(map_multiprocessing(map_analytical_grads,sys_para.state_packages))
         for cost in sys_para.costs:
-            if cost.type is not "control_explicitly_related":
+            if cost.type != "control_explicitly_related":
                 grads_ag = grads_ag + cost.grad_collection(sys_para.state_packages)
         return cost_value,grads_ag
 
@@ -255,12 +270,12 @@ def close_evolution_ag(controls, sys_para, state_package):
         H_total = get_H_total(controls, H_controls, H0, time_step)
         state_package['forward_state'] = expmat_vec_mul(-1j * delta_t * H_total, state_package['forward_state'], tol)
         for cost in sys_para.costs:
-            if cost.type is not "control_explicitly_related" and cost.requires_step_evaluation:
+            if cost.type != "control_explicitly_related" and cost.requires_step_evaluation:
                 state_package[cost.name + "_cost_value"] =  cost.cost( state_package['forward_state'],mode,
                                                                                   state_package[cost.name],state_package[cost.name + "_cost_value"]
                                                                        ,n)
     for cost in sys_para.costs:
-        if cost.type is not "control_explicitly_related" and not cost.requires_step_evaluation:
+        if cost.type != "control_explicitly_related" and not cost.requires_step_evaluation:
             state_package[cost.name + "_cost_value"] =  cost.cost( state_package['forward_state'],mode,
                                                                                   state_package[cost.name],state_package[cost.name + "_cost_value"]
                                                                        ,n)
@@ -276,7 +291,7 @@ def analytical_grads(controls, sys_para , state_package):
     tol = sys_para.tol
     costs=sys_para.costs
     for cost in sys_para.costs:
-        if cost.type is not "control_explicitly_related":
+        if cost.type != "control_explicitly_related":
             state_package[cost.name+"_bs"] = cost.gradient_initialize(state_package[cost.name]
                                                                   ,state_package[cost.name+"_grads_factor"])
     for n in range(total_time_steps):
@@ -284,11 +299,10 @@ def analytical_grads(controls, sys_para , state_package):
         H_total = get_H_total(controls, H_controls, H0, time_step)
         state_package['forward_state'] = expmat_vec_mul(1j * delta_t * H_total, state_package['forward_state'], tol)
         for cost in costs:
-            if cost.type is not "control_explicitly_related":
-                for control_index,H_control in enumerate(H_controls):
-                    state_package[cost.name + "_grad_value"] = cost.grads( state_package['forward_state'],state_package[cost.name+"_bs"],1j * delta_t * H_total,
-                                                                                  1j * delta_t * H_control,
-                                                                                  state_package[cost.name + "_grad_value"],tol,time_step-1,control_index)
+            if cost.type != "control_explicitly_related":
+                state_package[cost.name + "_grad_value"] = cost.grads( state_package['forward_state'],state_package[cost.name+"_bs"],1j * delta_t * H_total,
+                                                                                  1j * delta_t * H_controls,
+                                                                                  state_package[cost.name + "_grad_value"],tol,time_step-1)
                 state_package[cost.name + "_bs"] = cost.update_bs(state_package[cost.name],state_package[cost.name+"_grads_factor"],time_step-1)
     return state_package
 

@@ -6,47 +6,75 @@ from scipy.sparse import bmat, isspmatrix
 
 def expmat_der_vec_mul(A, E, tol, state):
     """
-    Calculate the action of propagator derivative.
-    First we construct auxiliary matrix and vector. Then use expm_multiply function.
-    Arg:
-    A :: numpy.ndarray - Total Hamiltonian
-    E :: numpy.ndarray - Control Hamiltonian
-    state :: numpy.ndarray
-    Returns:
-    numpy.ndarray,numpy.ndarray - vector for gradient calculation, updated state
-    """
-    state = np.complex128(state)
-    if tol == None:
-        tol = 2 ** -53
+        Calculate the action of propagator derivative.
+        First we construct auxiliary matrix and vector. Then use expm_multiply function.
+        Arg:
+        A :: numpy.ndarray - Total Hamiltonian
+        E :: numpy.ndarray - Control Hamiltonian
+        state :: numpy.ndarray
+        Returns:
+        numpy.ndarray,numpy.ndarray - vector for gradient calculation, updated state
+        """
+    state=np.complex128(state)
+    if tol==None:
+        tol=2**-53
+    control_number = len(E)
     HILBERT_SIZE = state.shape[0]
-    if isspmatrix(A) is False:
-        c = np.block([[A, E], [np.zeros_like(A), A]])
+    final_matrix = []
+    for i in range(control_number+1):
+        final_matrix.append([])
+    if isspmatrix(A) == False:
+        for i in range(control_number + 1):
+            raw_matrix = []
+            if i == 0:
+                raw_matrix = raw_matrix + [A]
+            else:
+                raw_matrix = raw_matrix + [np.zeros_like(A)]
+            for j in range(1, control_number + 1):
+                if j == i and i != 0:
+                    raw_matrix = raw_matrix + [A]
+                elif j == control_number and j != i:
+                    raw_matrix = raw_matrix + [E[i]]
+                    x=j-1
+                else:
+                    raw_matrix = raw_matrix + [np.zeros_like(A)]
+            final_matrix[i] = raw_matrix
+        final_matrix = np.block(final_matrix)
     else:
-        c = bmat([[A, E], [None, A]]).tocsc()
+        for i in range(control_number+1):
+            raw_matrix = []
+            if i == 0:
+                raw_matrix=raw_matrix+[A]
+            else:
+                raw_matrix = raw_matrix+[None]
+            for j in range(1,control_number+1):
+                if j == i and i != 0:
+                    raw_matrix = raw_matrix+[A]
+                elif j == control_number  and j!=i:
+                    raw_matrix = raw_matrix+[E[i]]
+                else:
+                    raw_matrix = raw_matrix+[None]
+            final_matrix[i] = raw_matrix
+        final_matrix=scipy.sparse.bmat(final_matrix)
     state = state.flatten()
     state0 = np.zeros_like(state)
-    state = np.block([state0, state])
-    state = expmat_vec_mul(c, state, tol)
-    new = state[HILBERT_SIZE:2 * HILBERT_SIZE]
-    state = state[0:HILBERT_SIZE]
-
-    return state, new
+    for i in range(control_number):
+        state = np.block([state0, state])
+    state = expmat_vec_mul(final_matrix, state,tol)
+    states = []
+    for i in range(control_number+1):
+        states.append(state[HILBERT_SIZE*i:HILBERT_SIZE*(i+1)])
+    return np.array(states)
 
 
 """Compute the action of the matrix exponential."""
 
 
-def one_norm(A):
-    """
-    Args:
-    A :: numpy.ndarray - matrix or vector
-    Returns:
-    one norm of A
-    """
+def _exact_inf_norm(A):
     if scipy.sparse.isspmatrix(A):
-        return max(abs(A).sum(axis=0).flat)
+        return max(abs(A).sum(axis=1).flat)
     else:
-        return np.linalg.norm(A, 1)
+        return np.linalg.norm(A, np.inf)
 
 def trace(A):
     """
@@ -73,34 +101,39 @@ def ident_like(A):
     else:
         return np.eye(A.shape[0], A.shape[1], dtype=A.dtype)
 
-
-def get_s(A,tol):
-    """
-        Determine s in scaling and squaring.
-        Args:
-        A :: numpy.ndarray - matrix
-        tol :: numpy.float64 - expected error
-        Returns:
-        s :: int
-    """
+def get_s(A, tol):
     s = 1
+    a = _exact_inf_norm(A)
     while (1):
-        tol_power = np.ceil(np.log10(tol))
-        norm_A = one_norm(A) / s
+        norm_A = a / s
         max_term_notation = np.floor(norm_A)
         max_term = 1
-        for i in range(1, np.int64(max_term_notation)):
+        for i in range(1, np.int(max_term_notation)):
             max_term = max_term * norm_A / i
-            max_power = np.ceil(np.log10(max_term))
-            if max_power > 30:
+            if max_term >= 10 ** 16:
                 break
-        max_power = np.ceil(np.log10(max_term))
-        if max_power - 16 <= tol_power:
+        if 10 ** -16 * max_term <= tol:
             break
         s = s + 1
     return s
 
-def expmat_vec_mul(A, b, tol=None):
+def get_s(A, tol):
+    s = 1
+    a = _exact_inf_norm(A)
+    while (1):
+        norm_A = a / s
+        max_term_notation = np.floor(norm_A)
+        max_term = 1
+        for i in range(1, np.int(max_term_notation)):
+            max_term = max_term * norm_A / i
+            if max_term >= 10 ** 16:
+                break
+        if 10 ** -16 * max_term <= tol:
+            break
+        s = s + 1
+    return s
+
+def expmat_vec_mul(A, B, tol=None):
     """
     Compute the exponential matrix and vector multiplication e^(A) B.
     Args:
@@ -115,38 +148,30 @@ def expmat_vec_mul(A, b, tol=None):
     mu = trace(A) / float(n)
     # Why mu? http://eprints.ma.man.ac.uk/1591/, section 3.1
     A = A - mu * ident
-    if tol is None:
+    if tol == None:
         tol = 1e-16
-    s = get_s(A,tol)
-    f = b
+    s = get_s(A, tol)
+    F = B
+    c1 = _exact_inf_norm(B)
     j = 0
     while (1):
-        eta = np.exp(mu / float(s))
         coeff = s * (j + 1)
-        b = A.dot(b) / coeff
-        c2 = one_norm(b)
-        f = f + b
-        total_norm = one_norm(f)
-        if c2 / total_norm < tol:
+        B = A.dot(B) / coeff
+        c2 = _exact_inf_norm(B)
+        F = F + B
+        if (c1 + c2) < tol:
             m = j + 1
             break
+        c1 = c2
         j = j + 1
-    f = eta * f
-    b = f
+    B = F
     for i in range(1, int(s)):
-        eta = np.exp(mu / float(s))
         for j in range(m):
             coeff = s * (j + 1)
-            b = A.dot(b) / coeff
-            c2 = one_norm(b)
-            f = f+ b
-            total_norm = one_norm(f)
-            if c2 / total_norm < tol:
-                m = j + 1
-                break
-        f = eta * f
-        b = f
-    return f
+            B = A.dot(B) / coeff
+            F = F + B
+        B = F
+    return F
 
 """
 expm.py - a module for all things e^M
@@ -384,7 +409,7 @@ def expm_pade(a):
 
     # If the one norm is large, scaling and squaring
     # is required.
-    if pade_order is None:
+    if pade_order==None:
         pade_order = 13
         scale = max(0, int(anp.ceil(anp.log2(one_norm_ / THETA[13]))))
         a = a * (2 ** -scale)

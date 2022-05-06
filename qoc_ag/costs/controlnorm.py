@@ -42,12 +42,16 @@ class ControlNorm():
         Parameters
         ----------
         controls:
-            Every control amplitude. Shape is (control_num, toltal_time_steps)
+            Every control amplitude. Shape==(control_num, toltal_time_steps)
+
+        Returns
+        -------
+        Cost value
         """
         cost_normalized=0
         if self.max_control_norms==None:
         # Weight the controls.
-            if self.control_weights is not None:
+            if self.control_weights != None:
                 controls = controls[:, ] * self.control_weights
         # The cost is the sum of the square of the modulus of the normalized,
         # weighted, controls.
@@ -60,7 +64,7 @@ class ControlNorm():
                 penalty_indices = anp.nonzero(control_sq >= max_norm)[0]
                 penalized_control = control_sq[penalty_indices]
                 penalty = (penalized_control-max_norm)/penalized_control
-                if self.control_weights is not None:
+                if self.control_weights != None:
                     penalty_normalized=penalty*self.control_weights[penalty_indices]
                 else:
                     penalty_normalized = penalty / (penalty_indices.shape[0]* len(self.max_control_norms))

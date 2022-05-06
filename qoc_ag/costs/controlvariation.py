@@ -47,8 +47,12 @@ class ControlVariation():
         ----------
         controls:
             Every control amplitude. Shape is (control_num, toltal_time_steps)
+
+        Returns
+        -------
+        Cost value
         """
-        if self.max_control_norms is None:
+        if self.max_control_norms == None:
             normalized_controls = controls
 
             # Penalize the square of the absolute value of the difference

@@ -17,7 +17,7 @@ class system_parameters():
                  save_file_path,
                  save_intermediate_states,
                  save_iteration_step, mode, tol):
-        self.H_controls = H_controls
+        self.H_controls = np.array(H_controls)
         self.control_num = len(H_controls)
         self.total_time_steps = total_time_steps
         self.costs = copy.deepcopy(costs)
@@ -27,7 +27,7 @@ class system_parameters():
         self.initial_controls = initial_controls
         self.max_iteration_num = max_iteration_num
         self.log_iteration_step = log_iteration_step
-        if max_control_norms is None:
+        if max_control_norms == None:
             self.max_control_norms = np.ones(self.control_num)
         else:
             self.max_control_norms = max_control_norms
@@ -39,8 +39,8 @@ class system_parameters():
         self.mode = mode
         self.tol = tol
         self.only_cost = False
-        if mode is "AG":
-            if len(initial_states.shape) is 1:
+        if mode == "AG":
+            if len(initial_states.shape) == 1:
                 self.dimension = 1
                 self.state_transfer = True
                 self.initial_states = np.array([initial_states])
@@ -49,7 +49,7 @@ class system_parameters():
                 self.state_transfer = False
                 self.initial_states = initial_states
             self.classification()
-        if mode is "AD":
+        if mode == "AD":
             for cost in self.costs:
                 cost.format(self.control_num, self.total_time_steps)
             self.initial_states = initial_states
@@ -60,7 +60,7 @@ class system_parameters():
             state_package = {}
             state_package['initial_state'] = initial_state
             for cost in self.costs:
-                if cost.name is not "ForbidStates":
+                if cost.name != "ForbidStates":
                     state_package[cost.name] = cost.target_states[state_index]
                 else:
                     state_package[cost.name] = cost.forbidden_states[:, state_index]
@@ -69,7 +69,7 @@ class system_parameters():
                 state_package[cost.name + "_grad_value"] = np.zeros(cost.grad_format, dtype=complex)
             self.state_packages.append(state_package)
         for cost in self.costs:
-            if cost.name is not "ForbidStates":
+            if cost.name != "ForbidStates":
                 cost.target_states = None
                 cost.target_states_dagger = None
             else:

@@ -42,6 +42,10 @@ class ControlBandwidthMax():
         ----------
         controls:
             Every control amplitude. Shape is (control_num, toltal_time_steps)
+
+        Returns
+        -------
+        Cost value
         """
         cost = 0
         # Iterate over the controls, penalize each control that has

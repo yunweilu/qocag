@@ -1,17 +1,26 @@
 import numpy as np
 def initialize_controls(total_time_steps,initial_controls, max_control_norms):
+<<<<<<< HEAD
     if initial_controls is not None:
         if (np.array(initial_controls).imag >= 1e16).any():
         # if initial_controls.dtype is np.complex128 or np.complex64 or np.complex256:
             raise ValueError("The program does not support complex control so far. Please use np.float type for control amplitudes")
         controls = initial_controls
     if initial_controls is None:
+=======
+    if type(initial_controls) == np.array or type(initial_controls) == list:
+        if initial_controls[0][0].dtype == np.complex:
+            raise ValueError("The program does not support complex control so far. Please use np.float type for control amplitudes")
+        else:
+            controls=initial_controls
+    else:
+>>>>>>> 4a6b349d3746a499795d59c54c12a76ae6a25511
         controls = gen_controls_flat( total_time_steps,max_control_norms)
 
     return controls
 def gen_controls_cos(total_time_steps,max_control_norms, periods=10.):
     """
-    Create a discrete control set that is shaped like
+    Create a discrete control set that==shaped like
     a cosine function.
 
     Arguments:
@@ -74,7 +83,7 @@ def gen_controls_white(  total_time_steps,
 def gen_controls_flat( total_time_steps,
                        max_control_norms,):
     """
-    Create a discrete control set that is shaped like
+    Create a discrete control set that==shaped like
     a flat line with small amplitude.
 
     Arguments:
