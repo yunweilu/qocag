@@ -5,10 +5,7 @@ from qoc_ag.functions.common import get_H_total
 from qoc_ag.functions.autogradutil import value_and_grad
 import numpy as np
 #from jax.config import config
-<<<<<<< HEAD
 # from qoc_ag.functions import expmat_vec_mul, expmat_vec_mul_ad,expm_pade
-=======
->>>>>>> 4a6b349d3746a499795d59c54c12a76ae6a25511
 from qoc_ag.functions import expmat_vec_mul, expm_pade
 import scqubits.settings as settings
 from scqubits.utils.cpu_switch import get_map_method
@@ -119,17 +116,10 @@ def grape_schroedinger_discrete(total_time_steps,
                                  save_iteration_step, mode, tol)
     initial_controls = initialize_controls(total_time_steps, initial_controls, sys_para.max_control_norms)
     initial_controls = np.ravel(initial_controls)
-<<<<<<< HEAD
     # turn to optimizer format which is 1darray
     pulse = sys_para.optimizer.run(cost_only, sys_para.max_iteration_num, initial_controls,
                            cost_gradients, args=(sys_para,), hamiltonian=H0, H_controls=H_controls, time_step_interval=total_time/total_time_steps, init_states=initial_states, **kwargs)
     return pulse
-=======
-    # turn to optimizer format which==1darray
-    sys_para.optimizer.run(cost_only, sys_para.max_iteration_num, initial_controls,
-                           cost_gradients, args=(sys_para,))
-
->>>>>>> 4a6b349d3746a499795d59c54c12a76ae6a25511
 
 def cost_only(controls, sys_para):
     control_num = sys_para.control_num
