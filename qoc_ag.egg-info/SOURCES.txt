@@ -1,4 +1,5 @@
 setup.py
+qoc_ag/__init__.py
 qoc_ag.egg-info/PKG-INFO
 qoc_ag.egg-info/SOURCES.txt
 qoc_ag.egg-info/dependency_links.txt
