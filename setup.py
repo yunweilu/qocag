@@ -29,4 +29,5 @@ setup(author=AUTHOR,
       install_requires=DEPENDENCIES,
       name=NAME,
       version=VERSION,
+      packages=['qoc_ag']
 )
