@@ -52,7 +52,7 @@ class ControlVariation():
         -------
         Cost value
         """
-        if type(self.max_variance) == None:
+        if self.max_variance == None:
             normalized_controls = controls
 
             # Penalize the square of the absolute value of the difference
