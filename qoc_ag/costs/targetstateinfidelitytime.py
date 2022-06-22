@@ -46,7 +46,7 @@ class TargetStateInfidelityTime():
         Will get shape of cost values and gradients.
         For this cost function, we store the values at each time step.
         We store gradients for each target state, control and time step.
-        The reason==that we evolve each state seperately, so we get each cost value
+        The reason is that we evolve each state seperately, so we get each cost value
         and sum over them after evolution. Please check the formula in the paper.
         Parameters
         ----------
