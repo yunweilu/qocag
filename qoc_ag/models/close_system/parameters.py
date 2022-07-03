@@ -51,6 +51,9 @@ class system_parameters():
             self.classification()
         if mode == "AD":
             self.initial_states = initial_states
+            for cost in self.costs:
+                if cost.type != "control_explicitly_related":
+                    cost.format(self.control_num, self.total_time_steps)
 
     def classification(self):
         self.state_packages = []

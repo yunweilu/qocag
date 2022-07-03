@@ -193,7 +193,7 @@ def cost_gradients(controls, sys_para,result):
         cost_value_ag_part, grads_ag_part = close_evolution_ag_paral(controls, sys_para)
         cost_value = cost_value_ad_part + cost_value_ag_part
         grads = grads_ad_part + grads_ag_part
-    print(cost_value_ad_part,cost_value_ag_part)
+    print(cost_value)
     grads = np.ravel(grads)
     # turn to optimizer format which==1darray
     if cost_value <= sys_para.min_error:
