@@ -67,9 +67,9 @@ class ControlVariation():
             cost_normalized = cost / self.cost_normalization_constant
         else:
             cost_normalized = 0
-            diffs = anp.diff(controls, axis=0, n=self.order)
+            diffs = anp.diff(controls, n=self.order)
             for i, max_variance in enumerate(self.max_variance):
-                diff = diffs[:, i]
+                diff = diffs[i, :]
                 diff_sq = anp.abs(diff)
                 penalty_indices = anp.nonzero(diff_sq > max_variance)[0]
                 penalized_control = diff_sq[penalty_indices]
