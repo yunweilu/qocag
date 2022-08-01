@@ -148,7 +148,7 @@ def grape_schroedinger_discrete(total_time_steps,
                            cost_gradients, args=(sys_para), hamiltonian=H0, H_controls=H_controls, time_step_interval=total_time/total_time_steps, init_states=initial_states, **kwargs)
     return pulse
 
-def cost_only(controls, sys_para,result):
+def cost_only(controls, sys_para):
     control_num = sys_para.control_num
     total_time_steps = sys_para.total_time_steps
     controls = np.reshape(controls, (control_num, total_time_steps))
