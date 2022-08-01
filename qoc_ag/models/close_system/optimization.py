@@ -114,8 +114,8 @@ def grape_schroedinger_discrete(total_time_steps,
                                  save_file_path,
                                  save_intermediate_states,
                                  save_iteration_step, mode, tol)
-    initial_controls = initialize_controls(total_time_steps, initial_controls, sys_para.max_control_norms)
-    initial_controls = np.ravel(initial_controls)
+    # initial_controls = initialize_controls(total_time_steps, initial_controls, sys_para.max_control_norms)
+    # initial_controls = np.ravel(initial_controls)
     # turn to optimizer format which is 1darray
     pulse = sys_para.optimizer.run(cost_only, sys_para.max_iteration_num, initial_controls,
                            cost_gradients, args=(sys_para,), hamiltonian=H0, H_controls=H_controls, time_step_interval=total_time/total_time_steps, init_states=initial_states, **kwargs)
@@ -218,10 +218,13 @@ def close_evolution(controls, sys_para):
 def close_evolution_ag_paral(controls, sys_para):
     cost_value=0
     grads_ag=0
-    if sys_para.state_transfer==True:
-        n = 1
-    else:
-        n = multiprocessing.cpu_count()
+
+    # if sys_para.state_transfer==True:
+    #     n = 1
+    # else:
+    #     n = multiprocessing.cpu_count()
+    n = 1
+
     map_close_evolution_ag = partial(close_evolution_ag, controls, sys_para)
     map_multiprocessing = get_map_method(n)
     sys_para.state_packages = list(map_multiprocessing(map_close_evolution_ag,sys_para.state_packages))

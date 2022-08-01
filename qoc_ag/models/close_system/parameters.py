@@ -28,7 +28,7 @@ class system_parameters():
         self.max_iteration_num = max_iteration_num
         self.log_iteration_step = log_iteration_step
         if max_control_norms == None:
-            self.max_control_norms = np.ones(self.control_num)
+            self.max_control_norms = np.ones(self.control_num) * 9
         else:
             self.max_control_norms = max_control_norms
         self.min_error = min_error

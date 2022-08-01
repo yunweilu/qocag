@@ -43,14 +43,15 @@ class LBFGSB(object):
         options = {
             "maxiter": iteration_count,
         }
-
-        ######################### plot the current status of optimization #########################
+        
+# ##############################################################################
+# ################## plot the current status of optimization ###################
         from IPython.display import clear_output, display
         import matplotlib.pyplot as plt
         import qutip as qt
 
         # plot setting
-        detail_update_period = 20
+        detail_update_period = 100
         state_evolution_samples = 4
 
         # prepare parameters
@@ -84,7 +85,7 @@ class LBFGSB(object):
                     target_n_basis.append(np.diag(qt.ptrace(qt_target[i], j).full()))
 
         # figure
-        fig = plt.figure(figsize=(20, 8))
+        fig = plt.figure(figsize=(10, 4))
         ax0 = fig.add_subplot(2, 1, 1)
         ax1 = fig.add_subplot(2, 2, 3)
         ax2 = fig.add_subplot(2, 2, 4)
@@ -180,7 +181,7 @@ class LBFGSB(object):
                                 scatter_label = f"target state {i}"
                             else:
                                 scatter_label = None
-
+ 
                             ax2.scatter(plot_x, result_n_basis[idx].real, color=color, label=scatter_label, alpha=scatter_alpha, s=scatter_size)
                 ax2.legend()
 
@@ -196,8 +197,13 @@ class LBFGSB(object):
         def print_error(x):
             print(function_(x, args[0]))
 
+# ##############################################################################
+
         minimized_pulse = minimize(function_, initial_params, args=args,
                         method="L-BFGS-B", jac=jacobian_,
                         options=options, callback=plot_status, tol=tol).x
+
         plt.close()
+
+
         return minimized_pulse
