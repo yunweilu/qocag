@@ -46,7 +46,7 @@ class TargetStateInfidelityTime():
         Will get shape of cost values and gradients.
         For this cost function, we store the values at each time step.
         We store gradients for each target state, control and time step.
-        The reason==that we evolve each state seperately, so we get each cost value
+        The reason is that we evolve each state seperately, so we get each cost value
         and sum over them after evolution. Please check the formula in the paper.
         Parameters
         ----------
@@ -102,7 +102,7 @@ class TargetStateInfidelityTime():
         inner_product_square = anp.real(inner_product * anp.conjugate(inner_product))
         # Normalize the cost for the number of evolving states
         # and the number of times the cost==computed.
-        cost_value = 1 - inner_product_square * self.cost_normalization_constant
+        cost_value = (1 - inner_product_square) * self.cost_normalization_constant
         return cost_value * self.cost_multiplier
 
     def cost_value_ag(self, forward_state: np.ndarray,
@@ -176,7 +176,7 @@ class TargetStateInfidelityTime():
 
     def grads(self, forward_state: np.ndarray, backward_states: np.ndarray,
               H_total: np.ndarray, H_control: np.ndarray, grads: np.ndarray
-              , tol: float, time_step_index: int, control_index: int) -> np.ndarray:
+              , tol: float, time_step_index: int,) -> np.ndarray:
         """
         Calculate pieces in gradients expression
         Parameters
@@ -201,10 +201,12 @@ class TargetStateInfidelityTime():
         -------
         Gradients pieces
         """
-        propagator_der_state, updated_bs = expmat_der_vec_mul(H_total, H_control, tol, backward_states)
-        self.updated_bs = updated_bs
-        grads[control_index][time_step_index] = self.cost_multiplier * (-2 * self.cost_normalization_constant *
-                                                                        np.inner(np.conjugate(propagator_der_state),
+        states = expmat_der_vec_mul(H_total, H_control, tol, backward_states)
+        control_number = len(H_control)
+        self.updated_bs = states[control_number]
+        for control_index in range(control_number):
+            grads[control_index][time_step_index] = self.cost_multiplier * (-2 * self.cost_normalization_constant *
+                                                                        np.inner(np.conjugate(states[control_index]),
                                                                                  forward_state)) / (
                                                         self.state_count ** 2)
         return grads

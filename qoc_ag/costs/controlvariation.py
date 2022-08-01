@@ -52,7 +52,7 @@ class ControlVariation():
         -------
         Cost value
         """
-        if self.max_control_norms == None:
+        if self.max_variance == None:
             normalized_controls = controls
 
             # Penalize the square of the absolute value of the difference
@@ -67,14 +67,14 @@ class ControlVariation():
             cost_normalized = cost / self.cost_normalization_constant
         else:
             cost_normalized = 0
-            diffs = anp.diff(controls, axis=0, n=self.order)
-            for i, max_variance in enumerate(self.max_control_variance):
-                diff = diffs[:, i]
+            diffs = anp.diff(controls, n=self.order)
+            for i, max_variance in enumerate(self.max_variance):
+                diff = diffs[i, :]
                 diff_sq = anp.abs(diff)
                 penalty_indices = anp.nonzero(diff_sq > max_variance)[0]
                 penalized_control = diff_sq[penalty_indices]
                 penalty = (penalized_control - max_variance) / penalized_control
-                penalty_normalized = penalty / (penalty_indices.shape[0] * len(self.max_control_variance))
+                penalty_normalized = penalty / (penalty_indices.shape[0] * len(self.max_variance))
                 cost_normalized = cost_normalized + anp.sum(penalty_normalized)
 
         return cost_normalized * self.cost_multiplier

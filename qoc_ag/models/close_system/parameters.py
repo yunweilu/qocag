@@ -50,9 +50,10 @@ class system_parameters():
                 self.initial_states = initial_states
             self.classification()
         if mode == "AD":
-            for cost in self.costs:
-                cost.format(self.control_num, self.total_time_steps)
             self.initial_states = initial_states
+            for cost in self.costs:
+                if cost.type != "control_explicitly_related":
+                    cost.format(self.control_num, self.total_time_steps)
 
     def classification(self):
         self.state_packages = []
@@ -60,18 +61,20 @@ class system_parameters():
             state_package = {}
             state_package['initial_state'] = initial_state
             for cost in self.costs:
-                if cost.name != "ForbidStates":
-                    state_package[cost.name] = cost.target_states[state_index]
-                else:
-                    state_package[cost.name] = cost.forbidden_states[:, state_index]
-                cost.format(self.control_num, self.total_time_steps)
-                state_package[cost.name + "_cost_value"] = np.zeros(cost.cost_format, dtype=complex)
-                state_package[cost.name + "_grad_value"] = np.zeros(cost.grad_format, dtype=complex)
+                if cost.type != "control_explicitly_related":
+                    if cost.name != "ForbidStates":
+                        state_package[cost.name] = cost.target_states[state_index]
+                    else:
+                        state_package[cost.name] = cost.forbidden_states[:, state_index]
+                    cost.format(self.control_num, self.total_time_steps)
+                    state_package[cost.name + "_cost_value"] = np.zeros(cost.cost_format, dtype=complex)
+                    state_package[cost.name + "_grad_value"] = np.zeros(cost.grad_format, dtype=complex)
             self.state_packages.append(state_package)
         for cost in self.costs:
-            if cost.name != "ForbidStates":
-                cost.target_states = None
-                cost.target_states_dagger = None
-            else:
-                cost.forbidden_states = None
-                cost.forbidden_states_dagger = None
+            if cost.type != "control_explicitly_related":
+                if cost.name != "ForbidStates":
+                    cost.target_states = None
+                    cost.target_states_dagger = None
+                else:
+                    cost.forbidden_states = None
+                    cost.forbidden_states_dagger = None

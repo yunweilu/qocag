@@ -183,7 +183,7 @@ class ForbidStates():
 
     def grads(self, forward_state: np.ndarray, backward_states: np.ndarray,
               H_total: np.ndarray, H_control: np.ndarray, grads:np.ndarray
-              , tol: float, time_step_index: int, control_index: int) -> np.ndarray:
+              , tol: float, time_step_index: int) -> np.ndarray:
         """
         Calculate pieces in gradients expression
         Parameters
@@ -209,12 +209,15 @@ class ForbidStates():
         Gradients pieces
         """
         self.updated_bs = []
+        control_number = len(H_control)
         for index, backward_states in enumerate(backward_states):
-            propagator_der_state, updated_bs = expmat_der_vec_mul(H_total, H_control, tol, backward_states)
+            states = expmat_der_vec_mul(H_total, H_control, tol, backward_states)
+            updated_bs = states[control_number]
             self.updated_bs.append(updated_bs)
-            grads[index][control_index][time_step_index] = self.cost_multiplier * (
+            for control_index in range(control_number):
+                grads[index][control_index][time_step_index] = self.cost_multiplier * (
                         2 * self.cost_normalization_constant *
-                        np.inner(np.conjugate(propagator_der_state),
+                        np.inner(np.conjugate(states[control_index]),
                                  forward_state))
         self.updated_bs = np.array(self.updated_bs)
         return grads

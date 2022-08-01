@@ -148,7 +148,7 @@ class TargetStateInfidelity():
         -------
         Cost value
         """
-        return np.real(1 - self.cost_normalization_constant * grads_factors * np.conjugate(grads_factors) * self.cost_multiplier)
+        return np.real(1 - self.cost_normalization_constant * grads_factors * np.conjugate(grads_factors) )* self.cost_multiplier
 
     def gradient_initialize(self, backward_state: np.ndarray,
                             grads_factor: np.ndarray) -> np.ndarray:
