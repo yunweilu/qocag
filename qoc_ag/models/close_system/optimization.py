@@ -143,12 +143,12 @@ def grape_schroedinger_discrete(total_time_steps,
     # initial_controls = np.ravel(initial_controls)
     # turn to optimizer format which is 1darray
 
-    # result = GrapeSchroedingerResult()
+    result = GrapeSchroedingerResult()
     pulse = sys_para.optimizer.run(cost_only, sys_para.max_iteration_num, initial_controls,
-                           cost_gradients, args=(sys_para), hamiltonian=H0, H_controls=H_controls, time_step_interval=total_time/total_time_steps, init_states=initial_states, **kwargs)
-    return pulse
+                           cost_gradients, args=(sys_para, result), hamiltonian=H0, H_controls=H_controls, time_step_interval=total_time/total_time_steps, init_states=initial_states, **kwargs)
+    return result
 
-def cost_only(controls, sys_para):
+def cost_only(controls, sys_para, result):
     control_num = sys_para.control_num
     total_time_steps = sys_para.total_time_steps
     controls = np.reshape(controls, (control_num, total_time_steps))
@@ -171,7 +171,7 @@ def cost_only(controls, sys_para):
     return cost_value, terminate
 
 
-def cost_gradients(controls, sys_para,result):
+def cost_gradients(controls, sys_para, result):
     """
     This function==used to get cost values and gradients by only automatic differentiation
     or combination of analytical gradients and AD
