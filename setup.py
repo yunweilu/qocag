@@ -30,6 +30,6 @@ setup(author=AUTHOR,
       install_requires=DEPENDENCIES,
       name=NAME,
       version=VERSION,
-      packages=['qoc_ag']
-      py_modules=PY_MODULE
+      packages=['qoc_ag'],
+      py_modules=PY_MODULE,
 )
