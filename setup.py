@@ -19,6 +19,7 @@ DEPENDENCIES = [
     "scqubits",
     "pathos"
 ]
+PY_MODULE = []
 DESCRIPTION = "a package for performing quantum optimal control"
 AUTHOR = "Yunwei LU"
 AUTHOR_EMAIL = "yunweilu2020@u.northwestern.edu"
@@ -30,4 +31,5 @@ setup(author=AUTHOR,
       name=NAME,
       version=VERSION,
       packages=['qoc_ag']
+      py_modules=PY_MODULE
 )
