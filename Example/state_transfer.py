@@ -1,7 +1,7 @@
 import numpy as np
-from qoc_ag.models.close_system.optimization import grape_schroedinger_discrete
-from qoc_ag.costs.targetstateinfidelity import TargetStateInfidelity
-from qoc_ag.optimizers.adam import Adam
+from qocag.models.close_system.optimization import grape_schroedinger_discrete
+from qocag.costs.targetstateinfidelity import TargetStateInfidelity
+from qocag.optimizers.adam import Adam
 total_time_steps=10
 #Toltal number of descretized time pieces
 costs=[TargetStateInfidelity(target_states=np.array([0,1]))]
