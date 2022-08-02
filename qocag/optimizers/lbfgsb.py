@@ -204,8 +204,6 @@ class LBFGSB(object):
         
 
 # ##############################################################################
-        print(jacobian_(initial_params, *args))
-
         minimized_pulse = minimize(function_, initial_params, args=args,
                         method="L-BFGS-B", jac=jacobian_,
                         options=options, callback=plot_status, tol=tol).x
