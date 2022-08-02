@@ -58,7 +58,11 @@ class LBFGSB(object):
         hamiltonian = qt.Qobj(kwargs["hamiltonian"])
         H_controls = kwargs["H_controls"]
         time_step_interval = kwargs["time_step_interval"]
-        dims = kwargs["dims"]
+        try:
+            dims = kwargs["dims"]
+        except KeyError:
+            dims = hamiltonian.dims[0]
+
         target_states = kwargs["target_states"]
         init_states = kwargs["init_states"]
         try: 
@@ -98,7 +102,7 @@ class LBFGSB(object):
         def plot_status(x):
             clear_output(wait=True)
 
-            current_error = function_(x, args[0])
+            current_error = function_(x, *args)
             error_record.append(current_error)
 
             pulse = x.reshape(pulse_num, -1)
@@ -195,9 +199,12 @@ class LBFGSB(object):
 
 
         def print_error(x):
-            print(function_(x, args[0]))
+            print(function_(x, *args))
+        
+        
 
 # ##############################################################################
+        print(jacobian_(initial_params, *args))
 
         minimized_pulse = minimize(function_, initial_params, args=args,
                         method="L-BFGS-B", jac=jacobian_,
