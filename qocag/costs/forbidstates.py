@@ -4,9 +4,9 @@ the occupation of a set of forbidden states.
 """
 
 import numpy as np
-from qoc_ag.functions.common import conjugate_transpose_ad
+from qocag.functions.common import conjugate_transpose_ad
 import autograd.numpy as anp
-from qoc_ag.functions import expmat_der_vec_mul
+from qocag.functions import expmat_der_vec_mul
 
 class ForbidStates():
     """
