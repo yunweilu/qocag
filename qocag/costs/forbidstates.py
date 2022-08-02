@@ -179,7 +179,8 @@ class ForbidStates():
         -------
         Backward propagating states Y in the paper
         """
-        return backward_state * grads_factor[:, -1]
+        print(grads_factor[:,-1])
+        return backward_state * grads_factor[:, -1:]
 
     def grads(self, forward_state: np.ndarray, backward_states: np.ndarray,
               H_total: np.ndarray, H_control: np.ndarray, grads:np.ndarray
@@ -238,7 +239,10 @@ class ForbidStates():
         -------
         Updated backward propagating states
         """
-        return self.updated_bs + grad_factor[:, time_step - 1] * forbidden_state
+        if time_step==0:
+            return self.updated_bs
+        else:
+            return self.updated_bs + grad_factor[:, time_step - 1:time_step ] * forbidden_state
 
     def grad_collection(self, state_packages:dict) -> np.ndarray:
         """
