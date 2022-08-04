@@ -234,7 +234,7 @@ def close_evolution(controls, sys_para):
             time_step = n+1
             H_total = get_H_total(controls, H_controls, H0, time_step)
             propagator=expm_pade(-1j * delta_t * H_total)
-            state = anp.matmul(propagator,state)
+            state = anp.transpose(anp.matmul(propagator,anp.transpose(state)))
             for cost in sys_para.costs:
                 if cost.type != "control_explicitly_related" and cost.requires_step_evaluation:
                     cost_value = cost_value + cost.cost(state, mode, None,None,None)
