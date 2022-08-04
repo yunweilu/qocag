@@ -69,4 +69,5 @@ class ControlNorm():
                 else:
                     penalty_normalized = penalty / (penalty_indices.shape[0]* len(self.max_control_norms))
                 cost_normalized = cost_normalized + anp.sum(penalty_normalized)
-        return cost_normalized * self.cost_multiplier
+        self.cost_value = cost_normalized * self.cost_multiplier
+        return self.cost_value

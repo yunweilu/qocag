@@ -2,9 +2,9 @@ from qocag.optimizers.adam import Adam
 from qocag.models.close_system.parameters import system_parameters
 from qocag.functions.initialization import initialize_controls
 from qocag.functions.common import get_H_total
-from qocag.functions.autogradutil import value_and_grad
+from qocag.functions.save_and_plot import print_heading,print_grads
+from autograd import value_and_grad
 import numpy as np
-#from jax.config import config
 from qocag.functions import expmat_vec_mul, expm_pade
 import scqubits.settings as settings
 from scqubits.utils.cpu_switch import get_map_method
@@ -18,10 +18,10 @@ os.environ["NUMEXPR_NUM_THREADS"] = "1"
 
 settings.MULTIPROC = "pathos"
 
-#config.update("jax_enable_x64", True)
+# config.update("autograd_enable_x64", True)
 
 
-# Default float type in Jax==float32.
+# Default float type in autograd==float32.
 class GrapeSchroedingerResult(object):
     """
     This class encapsulates the result of the
@@ -34,7 +34,7 @@ class GrapeSchroedingerResult(object):
     best_final_states
     best_iteration
     """
-    def __init__(self, best_controls=None,
+    def __init__(self, costs_len=None,save_file_path=None,best_controls=None,
                  best_error=np.finfo(np.float64).max,
                  best_final_states=None,
                  best_iteration=None,):
@@ -46,6 +46,18 @@ class GrapeSchroedingerResult(object):
         self.best_error = best_error
         self.best_final_states = best_final_states
         self.best_iteration = best_iteration
+        self.iteration = 1
+        self.costs_len=costs_len
+        self.cost = []
+        for i in range(costs_len):
+            self.cost.append([])
+        self.control_iter=[]
+        self.save_file_path=save_file_path
+
+    def save_data(self,timegrid):
+        result={"control_iter":self.control_iter,"cost_iter":np.array(self.cost),"times":timegrid}
+        if self.save_file_path != None:
+            np.save(self.save_file_path,result)
 
 def grape_schroedinger_discrete(total_time_steps,
                                 costs, total_time, H0, H_controls,
@@ -57,8 +69,7 @@ def grape_schroedinger_discrete(total_time_steps,
                                 max_control_norms=None,
                                 min_error=0,
                                 optimizer=Adam(),
-                                save_file_path=None,
-                                save_intermediate_states=False,
+                                save_intermediate_states=False,save_file_path=None,
                                 save_iteration_step=0, mode='AD', tol=1e-8):
     """
     This method optimizes the evolution of a set of states under the schroedinger
@@ -140,8 +151,10 @@ def grape_schroedinger_discrete(total_time_steps,
                                  save_iteration_step, mode, tol)
     initial_controls = initialize_controls(total_time_steps, initial_controls, sys_para.max_control_norms)
     initial_controls = np.ravel(initial_controls)
+    costs_len=len(costs)
     # turn to optimizer format which==1darray
-    result = GrapeSchroedingerResult()
+    result = GrapeSchroedingerResult(costs_len,save_file_path)
+    print_heading()
     sys_para.optimizer.run(cost_only, sys_para.max_iteration_num, initial_controls,
                            cost_gradients, args=(sys_para,result))
     return result
@@ -168,7 +181,6 @@ def cost_only(controls, sys_para,result):
     # Determine if optimization should terminate.
     return cost_value, terminate
 
-
 def cost_gradients(controls, sys_para,result):
     """
     This function==used to get cost values and gradients by only automatic differentiation
@@ -178,24 +190,32 @@ def cost_gradients(controls, sys_para,result):
         sys_para :: class - a class that contains system infomation
     return: cost values and gradients
     """
+
     control_num = sys_para.control_num
     total_time_steps = sys_para.total_time_steps
+    total_time = sys_para.total_time
     controls = np.reshape(controls, (control_num, total_time_steps))
+    times = np.linspace(0, total_time, total_time_steps+1)
+    times=np.delete(times, [len(times) - 1])
+    result.control_iter.append(controls)
     # turn the optimizer format to the format given by user
     if sys_para.impose_control_conditions:
         controls = sys_para.impose_control_conditions(controls)
     # impose boundary conditions for control
     if sys_para.mode=="AD":
-        cost_value, grads = value_and_grad(close_evolution)(controls, sys_para)
+        cost_value, grads = value_and_grad(close_evolution)(controls, sys_para,result)
     else:
         sys_para.only_cost=False
-        cost_value_ad_part, grads_ad_part = value_and_grad(close_evolution)(controls, sys_para)
-        cost_value_ag_part, grads_ag_part = close_evolution_ag_paral(controls, sys_para)
+        cost_value_ad_part, grads_ad_part = value_and_grad(close_evolution)(controls, sys_para,result)
+        cost_value_ag_part, grads_ag_part = close_evolution_ag_paral(controls, sys_para,result)
         cost_value = cost_value_ad_part + cost_value_ag_part
         grads = grads_ad_part + grads_ag_part
-    print(cost_value)
     grads = np.ravel(grads)
-    # turn to optimizer format which==1darray
+    #print total cost value and norm of grads
+    print_grads(result.iteration,cost_value,grads)
+    #save control, cost value for each iteration
+    result.save_data(times)
+    result.iteration += 1
     if cost_value <= sys_para.min_error:
         terminate = True
     else:
@@ -205,8 +225,7 @@ def cost_gradients(controls, sys_para,result):
         result.best_error = cost_value
     return grads, terminate
 
-
-def close_evolution(controls, sys_para):
+def close_evolution(controls, sys_para,result):
     """
     Get cost_values by evolving schrodinger equation.
     Args:
@@ -219,12 +238,12 @@ def close_evolution(controls, sys_para):
     H0 = sys_para.H0
     state = sys_para.initial_states
     delta_t = sys_para.total_time / total_time_steps
-    tol = sys_para.tol
     mode = sys_para.mode
     cost_value = 0.
-    for cost in sys_para.costs:
+    for i,cost in enumerate(sys_para.costs):
         if cost.type=="control_explicitly_related":
             cost_value = cost_value + cost.cost(controls)
+            result.cost[i].append(cost.cost_value._value)
     if mode=="AG":
         return cost_value
     if mode=="AD":
@@ -232,17 +251,17 @@ def close_evolution(controls, sys_para):
             time_step = n+1
             H_total = get_H_total(controls, H_controls, H0, time_step)
             propagator=expm_pade(-1j * delta_t * H_total)
-            state = anp.matmul(propagator,state)
+            state = anp.transpose(anp.matmul(propagator,anp.transpose(state)))
             for cost in sys_para.costs:
                 if cost.type != "control_explicitly_related" and cost.requires_step_evaluation:
-                    cost_value = cost_value + cost.cost(state, mode, None,None,None)
-        for cost in sys_para.costs:
+                    cost_value = cost_value + cost.cost(state, mode, None,None,None)[0]
+        for i,cost in enumerate(sys_para.costs):
             if cost.type != "control_explicitly_related" and not cost.requires_step_evaluation:
-                cost_value = cost_value + cost.cost(state, mode, None,None,None)
+                cost_value = cost_value + cost.cost(state, mode, None,None,None)[0]
+                result.cost[i].append(cost.cost_value._value[0])
         return cost_value
 
-
-def close_evolution_ag_paral(controls, sys_para):
+def close_evolution_ag_paral(controls, sys_para,result):
     cost_value=0
     grads_ag=0
     if sys_para.state_transfer==True:
@@ -317,6 +336,7 @@ def analytical_grads(controls, sys_para , state_package):
                                                                                   state_package[cost.name + "_grad_value"],tol,time_step-1)
                 state_package[cost.name + "_bs"] = cost.update_bs(state_package[cost.name],state_package[cost.name+"_grads_factor"],time_step-1)
     return state_package
+
 
 
 

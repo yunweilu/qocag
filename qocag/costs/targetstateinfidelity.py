@@ -73,9 +73,11 @@ class TargetStateInfidelity():
             Toltal number of time steps
         """
         if mode=="AD":
-            return self.cost_value_ad(forward_state)
+            self.cost_value=self.cost_value_ad(forward_state)
+            return self.cost_value
         else:
             return self.cost_value_ag(forward_state, backward_state)
+
 
     def cost_value_ad(self, states: np.ndarray) -> float:
         """

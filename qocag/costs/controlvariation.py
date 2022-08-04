@@ -52,6 +52,14 @@ class ControlVariation():
         -------
         Cost value
         """
+        controls_new=[]
+        for i in range(len(controls)):
+            controls_new.append([])
+            controls_new[i].append(0)
+            for j in range(len(controls[0])):
+                controls_new[i].append(controls[i][j])
+            controls_new[i].append(0)
+        controls_new=anp.array(controls_new)
         if self.max_variance == None:
             normalized_controls = controls
 
@@ -67,14 +75,15 @@ class ControlVariation():
             cost_normalized = cost / self.cost_normalization_constant
         else:
             cost_normalized = 0
-            diffs = anp.diff(controls, n=self.order)
+            diffs = anp.diff(controls_new, n=self.order)
             for i, max_variance in enumerate(self.max_variance):
                 diff = diffs[i, :]
-                diff_sq = anp.abs(diff)
-                penalty_indices = anp.nonzero(diff_sq > max_variance)[0]
-                penalized_control = diff_sq[penalty_indices]
+                diff_abs = anp.abs(diff)
+                penalty_indices = anp.nonzero(diff_abs > max_variance)[0]
+                penalized_control = diff_abs[penalty_indices]
                 penalty = (penalized_control - max_variance) / penalized_control
                 penalty_normalized = penalty / (penalty_indices.shape[0] * len(self.max_variance))
                 cost_normalized = cost_normalized + anp.sum(penalty_normalized)
+                self.cost_value=cost_normalized * self.cost_multiplier
 
-        return cost_normalized * self.cost_multiplier
+        return self.cost_value

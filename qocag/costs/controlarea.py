@@ -64,5 +64,5 @@ class ControlArea():
                     cost = cost + anp.abs(anp.sum(controls[i]))
                 cost = cost - self.max_area[i]
             cost_normalized = cost / anp.sum(controls)
-
-        return cost_normalized * self.cost_multiplier
+        self.cost_value=cost_normalized * self.cost_multiplier
+        return self.cost_value

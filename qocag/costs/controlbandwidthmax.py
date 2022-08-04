@@ -51,7 +51,7 @@ class ControlBandwidthMax():
         # Iterate over the controls, penalize each control that has
         # frequencies greater than its maximum frequency.
         for i, max_bandwidth in enumerate(self.max_bandwidths):
-            control_fft = anp.fft.fft(controls[:, i])
+            control_fft = anp.fft.fft(controls[i])
             control_fft_sq = anp.abs(control_fft)
             penalty_freq_indices = anp.nonzero(self.freqs >= max_bandwidth)[0]
             penalized_ffts = control_fft_sq[penalty_freq_indices]
@@ -61,6 +61,5 @@ class ControlBandwidthMax():
             else:
                 penalty_normalized = penalty - 1e-4 / penalty
             cost = cost + penalty_normalized
-        cost_normalized = cost / self.control_num
-
-        return cost_normalized * self.cost_multiplier
+        self.cost_value = self.cost_multiplier*cost / self.control_num*controls[0][0]/controls[0][0]
+        return self.cost_value
