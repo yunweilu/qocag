@@ -8,12 +8,12 @@ total_time_steps=100
 cost1=TargetStateInfidelity(target_states=np.array([0,1]),cost_multiplier=0.98)
 cost2=ControlVariation(control_num=1,total_time_steps=100,cost_multiplier=0.01,max_variance=np.array([0.001]),order=1)
 cost3=ControlVariation(control_num=1,total_time_steps=100,cost_multiplier=0.01,max_variance=np.array([0.001]),order=2)
-cost4=ControlBandwidthMax(control_num=1,total_time_steps=100,cost_multiplier=0.01,evolution_time=10,max_bandwidths=np.array([2]))
-costs=[cost1,cost2,cost3]
+cost4=ControlBandwidthMax(control_num=1,total_time_steps=100,cost_multiplier=0.02,evolution_time=10,max_bandwidths=np.array([1.1]))
+costs=[cost1,cost2,cost3,cost4]
 #Target state is |1>
 total_time=10
 #Evolution time is 10 ns
-H0=np.array([[-1,0],[0,1]])/2
+H0=np.array([[-1,0],[0,1]])*2*np.pi/2
 #Qubit frequency is 1GHZ
 H_controls=[np.array([[0,1],[1,0]])]
 #Control Hamiltonian is sigma_x
@@ -21,6 +21,8 @@ initial_states=np.array([1,0])
 #Initial state is |0>
 initial_control=0.0001*np.ones((1,total_time_steps))
 save_file_path=generate_save_file_path("state_transfer","./out")
+result=np.load("./out/00044_state_transfer.npy",allow_pickle=True).item()
+initial_control=result["control_iter"][-1]
 grape_schroedinger_discrete(total_time_steps,
                                 costs, total_time, H0, H_controls,
                                 initial_states,max_iteration_num=10000,

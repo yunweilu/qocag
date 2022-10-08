@@ -66,9 +66,9 @@ def control_ani(result):
                 i=control_num-1
             i=np.int(i)
             ax_con.plot(times, controls[i][j], label=str(j))
-            dt = (times[-1] - times[0]) / len(times)
+            dt = (times[1] - times[0])
             fourier = np.abs(rfft(controls[i][j]))
-            freq = rfftfreq(len(times), dt) * 2 * np.pi
+            freq = rfftfreq(len(times), dt)
             max_index = np.argpartition(abs(fourier), -3)[-3:]
             ax_fft.stem(freq, fourier, markerfmt=' ', label='')
             for index in max_index:
