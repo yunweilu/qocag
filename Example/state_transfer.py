@@ -23,7 +23,8 @@ initial_control=0.0001*np.ones((1,total_time_steps))
 save_file_path=generate_save_file_path("state_transfer","./out")
 result=np.load("./out/00044_state_transfer.npy",allow_pickle=True).item()
 initial_control=result["control_iter"][-1]
-grape_schroedinger_discrete(total_time_steps,
+result=grape_schroedinger_discrete(total_time_steps,
                                 costs, total_time, H0, H_controls,
-                                initial_states,max_iteration_num=10000,
-                                optimizer=Adam(), mode='AD', tol=1e-15,save_file_path=save_file_path,initial_controls=initial_control)
+                                initial_states,max_iteration_num=1,
+                                optimizer=Adam(), mode='AD', tol=1e-15,initial_controls=initial_control)
+print(result.best_error_set)

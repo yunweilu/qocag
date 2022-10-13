@@ -46,8 +46,9 @@ class GrapeSchroedingerResult(object):
         self.best_error = best_error
         self.best_final_states = best_final_states
         self.best_iteration = best_iteration
-        self.iteration = 1
+        self.iteration = 0
         self.costs_len=costs_len
+        self.best_error_set = np.zeros(costs_len)
         self.cost = []
         for i in range(costs_len):
             self.cost.append([])
@@ -56,6 +57,8 @@ class GrapeSchroedingerResult(object):
 
     def save_data(self,timegrid):
         result={"control_iter":self.control_iter,"cost_iter":np.array(self.cost),"times":timegrid}
+        for i in range(self.costs_len):
+            self.best_error_set[i]=self.cost[i][self.best_iteration-1]
         if self.save_file_path != None:
             np.save(self.save_file_path,result)
 
@@ -214,7 +217,6 @@ def cost_gradients(controls, sys_para,result):
     #print total cost value and norm of grads
     print_grads(result.iteration,cost_value,grads)
     #save control, cost value for each iteration
-    result.save_data(times)
     result.iteration += 1
     if cost_value <= sys_para.min_error:
         terminate = True
@@ -223,6 +225,8 @@ def cost_gradients(controls, sys_para,result):
     if cost_value < result.best_error:
         result.best_controls = controls
         result.best_error = cost_value
+        result.best_iteration=result.iteration
+    result.save_data(times)
     return grads, terminate
 
 def close_evolution(controls, sys_para,result):
