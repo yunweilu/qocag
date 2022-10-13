@@ -5,15 +5,26 @@ from numpy.fft import rfft, rfftfreq
 import numpy as np
 from matplotlib.pyplot import figure
 
-def print_grads(iteration,cost_value,grads):
+def print_grads(iteration,cost_value,grads,cost_set):
     grads_norm = np.linalg.norm(grads)
-    print("{:^6d} | {:^1.8e} | {:^1.8e}"
-          "".format(iteration, cost_value,
-                    grads_norm))
+    output="{:^6d} | {:^1.8e} |".format(iteration, cost_value,)
+    cost_len=len(cost_set)
+    for i in range(cost_len):
+        output+="  {:^1.8e}  |".format(cost_set[i])
+    output += "  {:^1.8e}  ".format(grads_norm)
+    print(output)
 
-def print_heading():
-    print("iter   |   total error  |    grads_l2   \n"
-          "=========================================")
+def print_heading(cost_len):
+    output="iter   |   total error  |"
+    dash="========================="
+    for i in range(cost_len):
+        output+=("       cost"+str(i)+"      |")
+        dash+="================="
+    output+=("   grads_l2  ")
+    dash += "================="
+    print(output)
+    print(dash)
+
 
 def generate_save_file_path(save_file_name, save_path):
     """

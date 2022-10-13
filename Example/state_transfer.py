@@ -25,6 +25,6 @@ result=np.load("./out/00044_state_transfer.npy",allow_pickle=True).item()
 initial_control=result["control_iter"][-1]
 result=grape_schroedinger_discrete(total_time_steps,
                                 costs, total_time, H0, H_controls,
-                                initial_states,max_iteration_num=1,
+                                initial_states,max_iteration_num=100,
                                 optimizer=Adam(), mode='AD', tol=1e-15,initial_controls=initial_control)
 print(result.best_error_set)
