@@ -6,8 +6,8 @@ from qocag.optimizers.adam import Adam
 total_time_steps=100
 #Toltal number of descretized time pieces
 cost1=TargetStateInfidelity(target_states=np.array([0,1]),cost_multiplier=0.98)
-cost2=ControlVariation(control_num=1,total_time_steps=100,cost_multiplier=0.01,max_variance=np.array([0.001]),order=1)
-cost3=ControlVariation(control_num=1,total_time_steps=100,cost_multiplier=0.01,max_variance=np.array([0.001]),order=2)
+cost2=ControlVariation(control_num=1,total_time_steps=100,cost_multiplier=0.01,order=1)
+cost3=ControlVariation(control_num=1,total_time_steps=100,cost_multiplier=0.01,order=2)
 cost4=ControlBandwidthMax(control_num=1,total_time_steps=100,cost_multiplier=0.02,evolution_time=10,max_bandwidths=np.array([1.1]))
 costs=[cost1,cost2,cost3,cost4]
 #Target state is |1>
