@@ -21,7 +21,7 @@ def print_heading(cost_len):
         output+=("       cost"+str(i)+"      |")
         dash+="================="
     output+=("   grads_l2  ")
-    dash += "================="
+    dash += "======================="
     print(output)
     print(dash)
 
