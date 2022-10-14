@@ -155,10 +155,11 @@ def grape_schroedinger_discrete(total_time_steps,
                                  save_intermediate_states,
                                  save_iteration_step, mode, tol)
     initial_controls = initialize_controls(total_time_steps, initial_controls, sys_para.max_control_norms)
-    initial_controls = np.ravel(initial_controls)
-    costs_len=len(costs)
+    costs_len = len(costs)
+    result = GrapeSchroedingerResult(costs_len, save_file_path)
+    result.control_iter.append(initial_controls)
     # turn to optimizer format which==1darray
-    result = GrapeSchroedingerResult(costs_len,save_file_path)
+    initial_controls = np.ravel(initial_controls)
     print_heading(result.costs_len)
     sys_para.optimizer.run(cost_only, sys_para.max_iteration_num, initial_controls,
                            cost_gradients, args=(sys_para,result))
@@ -174,7 +175,7 @@ def cost_only(controls, sys_para,result):
     # impose boundary conditions for control
     sys_para.only_cost = True
     if sys_para.mode=="AD":
-        cost_value = close_evolution(controls, sys_para)
+        cost_value = close_evolution(controls, sys_para,result)
     if sys_para.mode=="AG":
         cost_value_ad = close_evolution(controls, sys_para)
         cost_value=cost_value_ad+close_evolution_ag_paral(controls,sys_para)
@@ -249,7 +250,10 @@ def close_evolution(controls, sys_para,result):
     for i,cost in enumerate(sys_para.costs):
         if cost.type=="control_explicitly_related":
             cost_value = cost_value + cost.cost(controls)
-            result.cost[i].append(cost.cost_value._value)
+            if type(cost.cost_value)==np.float64:
+                result.cost[i].append(cost.cost_value)
+            else:
+                result.cost[i].append(cost.cost_value._value)
     if mode=="AG":
         return cost_value
     if mode=="AD":
@@ -264,7 +268,10 @@ def close_evolution(controls, sys_para,result):
         for i,cost in enumerate(sys_para.costs):
             if cost.type != "control_explicitly_related" and not cost.requires_step_evaluation:
                 cost_value = cost_value + cost.cost(state, mode, None,None,None)[0]
-                result.cost[i].append(cost.cost_value._value[0])
+                if type(cost.cost_value) == np.ndarray:
+                    result.cost[i].append(cost.cost_value[0])
+                else:
+                    result.cost[i].append(cost.cost_value._value[0])
         return cost_value
 
 def close_evolution_ag_paral(controls, sys_para,result):

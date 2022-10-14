@@ -65,16 +65,19 @@ def control_ani(result):
     plt.rcParams['figure.figsize'] = [10, 10]
     controls = result["control_iter"]
     times = result["times"]
-
+    if len(controls)<=100:
+        frame_num=10
+    else:
+        frame_num=100
     def animate(l):
         control_num = len(controls[0])
-        gap=np.ceil(control_num/100)
+        gap=np.ceil(len(controls)/frame_num)
         ax_con.clear()
         ax_fft.clear()
         for j in range(control_num):
-            i=gap*l
-            if j>control_num:
-                i=control_num-1
+            i=gap*(l)
+            if i>len(controls):
+                i=-1
             i=np.int(i)
             ax_con.plot(times, controls[i][j], label=str(j))
             dt = (times[1] - times[0])
@@ -90,5 +93,5 @@ def control_ani(result):
         ax_fft.set_ylabel("FFT Amplitude")
         ax_fft.set_xlabel("frequency")
 
-    ani = matplotlib.animation.FuncAnimation(fig, animate, frames=100,interval=10)
+    ani = matplotlib.animation.FuncAnimation(fig, animate, frames=frame_num,interval=10)
     return ani

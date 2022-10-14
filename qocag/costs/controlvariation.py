@@ -64,7 +64,7 @@ class ControlVariation():
             # Penalize the square of the absolute value of the difference
             # in value of the control parameters from one step to the next.
             diffs = anp.diff(controls_new, n=self.order)
-            cost = anp.sum(anp.real(diffs * anp.conjugate(diffs)))
+            cost = anp.sum(anp.power(diffs,2))
             # You can prove that the square of the complex modulus of the difference
             # between two complex values==l.t.e. 2 if the complex modulus
             # of the two complex values==l.t.e. 1 respectively using the

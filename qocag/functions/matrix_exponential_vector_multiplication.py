@@ -237,7 +237,7 @@ def pade9(a, i):
     a2 = anp.matmul(a, a)
     a4 = anp.matmul(a2, a2)
     a6 = anp.matmul(a2, a4)
-    a8 = anp.mtamul(a2, a6)
+    a8 = anp.matmul(a2, a6)
     u = anp.matmul(a, B[9] * a8 + B[7] * a6 + B[5] * a4 + B[3] * a2) + B[1] * a
     v = B[8] * a8 + B[6] * a6 + B[4] * a4 + B[2] * a2 + B[0] * i
     return u, v

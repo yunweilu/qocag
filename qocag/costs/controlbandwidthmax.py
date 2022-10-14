@@ -61,5 +61,5 @@ class ControlBandwidthMax():
             else:
                 penalty_normalized = penalty - 1e-4 / penalty
             cost = cost + penalty_normalized
-        self.cost_value = self.cost_multiplier*cost / self.control_num*controls[0][0]/controls[0][0]
+        self.cost_value = self.cost_multiplier*cost
         return self.cost_value
