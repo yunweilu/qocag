@@ -76,9 +76,9 @@ def control_ani(result):
         ax_fft.clear()
         for j in range(control_num):
             i=gap*(l)
-            if i>len(controls):
+            i = np.int(i)
+            if i>=len(controls):
                 i=-1
-            i=np.int(i)
             ax_con.plot(times, controls[i][j], label=str(j))
             dt = (times[1] - times[0])
             fourier = np.abs(rfft(controls[i][j]))
