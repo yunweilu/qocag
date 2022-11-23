@@ -1,9 +1,6 @@
 import numpy as np
-
-
 class system_parameters():
     final_states = None
-
     def __init__(self, total_time_steps,
                  costs, total_time, H0, H_controls,
                  initial_states,
@@ -16,7 +13,7 @@ class system_parameters():
                  optimizer,
                  save_file_path,
                  save_intermediate_states,
-                 save_iteration_step, mode, tol):
+                 save_iteration_step,noise_operator, noise_spectrum,mode, tol):
         self.H_controls = np.array(H_controls)
         self.control_num = len(H_controls)
         self.total_time_steps = total_time_steps
@@ -54,6 +51,8 @@ class system_parameters():
             for cost in self.costs:
                 if cost.type != "control_explicitly_related":
                     cost.format(self.control_num, self.total_time_steps)
+        self.noise_operator=noise_operator
+        self.noise_spectrum = noise_spectrum
 
     def classification(self):
         self.state_packages = []

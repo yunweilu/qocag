@@ -1,5 +1,5 @@
 from qocag.optimizers.adam import Adam
-from qocag.models.close_system.parameters import system_parameters
+from qocag.models.close_system.close_parameters import system_parameters
 from qocag.functions.initialization import initialize_controls
 from qocag.functions.common import get_H_total
 from qocag.functions.save_and_plot import print_heading,print_grads
@@ -13,13 +13,7 @@ import autograd.numpy as anp
 from functools import partial
 import warnings
 warnings.simplefilter("ignore", UserWarning)
-import os
-os.environ["NUMEXPR_NUM_THREADS"] = "1"
-
 settings.MULTIPROC = "pathos"
-
-# config.update("autograd_enable_x64", True)
-
 
 # Default float type in autograd==float32.
 class GrapeSchroedingerResult(object):
@@ -141,6 +135,8 @@ def grape_schroedinger_discrete(total_time_steps,
     Returns:
        result :: qoc.models.schroedingermodels.GrapeSchroedingerResult
        """
+    noise_operator=None
+    noise_spectrum = None
     sys_para = system_parameters(total_time_steps,
                                  costs, total_time, H0, H_controls,
                                  initial_states,
@@ -153,7 +149,7 @@ def grape_schroedinger_discrete(total_time_steps,
                                  optimizer,
                                  save_file_path,
                                  save_intermediate_states,
-                                 save_iteration_step, mode, tol)
+                                 save_iteration_step, noise_operator,noise_spectrum,mode, tol)
     initial_controls = initialize_controls(total_time_steps, initial_controls, sys_para.max_control_norms)
     costs_len = len(costs)
     result = GrapeSchroedingerResult(costs_len, save_file_path)
@@ -200,11 +196,11 @@ def cost_gradients(controls, sys_para,result):
     control_num = sys_para.control_num
     total_time_steps = sys_para.total_time_steps
     total_time = sys_para.total_time
+    # turn the optimizer format to the format given by user
     controls = np.reshape(controls, (control_num, total_time_steps))
     times = np.linspace(0, total_time, total_time_steps+1)
     times=np.delete(times, [len(times) - 1])
     result.control_iter.append(controls)
-    # turn the optimizer format to the format given by user
     if sys_para.impose_control_conditions:
         controls = sys_para.impose_control_conditions(controls)
     # impose boundary conditions for control
@@ -250,7 +246,7 @@ def close_evolution(controls, sys_para,result):
     for i,cost in enumerate(sys_para.costs):
         if cost.type=="control_explicitly_related":
             cost_value = cost_value + cost.cost(controls)
-            if type(cost.cost_value)==np.float64:
+            if type(cost.cost_value)==np.float:
                 result.cost[i].append(cost.cost_value)
             else:
                 result.cost[i].append(cost.cost_value._value)
@@ -263,10 +259,20 @@ def close_evolution(controls, sys_para,result):
             propagator=expm_pade(-1j * delta_t * H_total)
             state = anp.transpose(anp.matmul(propagator,anp.transpose(state)))
             for cost in sys_para.costs:
-                if cost.type != "control_explicitly_related" and cost.requires_step_evaluation:
+                if cost.type == "control_implicitly_related" and cost.requires_step_evaluation:
                     cost_value = cost_value + cost.cost(state, mode, None,None,None)[0]
         for i,cost in enumerate(sys_para.costs):
-            if cost.type != "control_explicitly_related" and not cost.requires_step_evaluation:
+            if cost.name == "TargetStateInfidelity":
+                infidelity=cost.cost(state, mode, None,None,None)[0]
+        for i,cost in enumerate(sys_para.costs):
+            if cost.name=="Robustness":
+                cost_value = cost_value + cost.cost(controls,sys_para,infidelity)[0]
+                if type(cost.cost_value) == np.ndarray:
+                    result.cost[i].append(cost.cost_value[0])
+                else:
+                    result.cost[i].append(cost.cost_value._value[0])
+                continue
+            if cost.type == "control_implicitly_related" and not cost.requires_step_evaluation:
                 cost_value = cost_value + cost.cost(state, mode, None,None,None)[0]
                 if type(cost.cost_value) == np.ndarray:
                     result.cost[i].append(cost.cost_value[0])

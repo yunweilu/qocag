@@ -1,6 +1,6 @@
 setup.py
-qoc_ag.egg-info/PKG-INFO
-qoc_ag.egg-info/SOURCES.txt
-qoc_ag.egg-info/dependency_links.txt
-qoc_ag.egg-info/requires.txt
-qoc_ag.egg-info/top_level.txt
+qocag.egg-info/PKG-INFO
+qocag.egg-info/SOURCES.txt
+qocag.egg-info/dependency_links.txt
+qocag.egg-info/requires.txt
+qocag.egg-info/top_level.txt

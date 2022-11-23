@@ -22,7 +22,7 @@ class TargetStateInfidelity():
     requires_step_evaluation = False
 
     def __init__(self, target_states: np.ndarray, cost_multiplier :float = 1.) -> None:
-        if len(target_states.shape)==2:
+        if len(target_states.shape)>1:
             self.state_transfer = False
             self.state_count = target_states.shape[0]
             self.target_states = target_states
@@ -41,7 +41,7 @@ class TargetStateInfidelity():
         Will get shape of cost values and gradients.
         For this cost function, we store the values at each time step.
         We store gradients for each target state, control and time step.
-        The reason==that we evolve each state seperately, so we get each cost value
+        The reason is that we evolve each state seperately, so we get each cost value
         and sum over them after evolution. Please check the formula in the paper.
         Parameters
         ----------
@@ -93,7 +93,7 @@ class TargetStateInfidelity():
         if self.state_transfer==True:
             inner_product = anp.inner(anp.conjugate(self.target_states), states)
         else:
-            inner_product = anp.trace(anp.matmul(self.target_states_dagger, states))
+            inner_product = anp.array([anp.trace(anp.matmul(self.target_states_dagger, states))])
         inner_product_square = anp.real(inner_product * anp.conjugate(inner_product))
         # Normalize the cost for the number of evolving states
         # and the number of times the cost==computed.

@@ -9,11 +9,13 @@ from .controlvariation import ControlVariation
 from .forbidstates import ForbidStates
 from .targetstateinfidelity import TargetStateInfidelity
 from .targetstateinfidelitytime import TargetStateInfidelityTime
+from .robustness import Robustness
+from .ko_targetstateinfidelity import KOTargetStateInfidelity
 
 __all__ = [
     "ControlArea", "ControlBandwidthMax",
     "ControlNorm", "ControlVariation",
      "ForbidStates",
-    "TargetStateInfidelity", "TargetStateInfidelityTime",
+    "TargetStateInfidelity", "TargetStateInfidelityTime","Robustness","KOTargetStateInfidelity"
 
 ]
