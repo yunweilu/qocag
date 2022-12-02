@@ -56,10 +56,6 @@ class ControlBandwidthMax():
             penalty_freq_indices = anp.nonzero(self.freqs >= max_bandwidth)[0]
             penalized_ffts = control_fft_sq[penalty_freq_indices]
             penalty = anp.sum(penalized_ffts)
-            if penalty < 1e-4:
-                penalty_normalized = 0
-            else:
-                penalty_normalized = penalty - 1e-4 / penalty
-            cost = cost + penalty_normalized
+            cost = cost + penalty
         self.cost_value = self.cost_multiplier*cost
         return self.cost_value

@@ -22,7 +22,8 @@ class Keldyshresult(GrapeSchroedingerResult):
                  best_final_states,
                  best_iteration,)
         self.noise_operators=[]
-
+        self.jump_operators = []
+        self.jump_operators_norm = []
 def grape_keldysh_discrete(total_time_steps,
                                 costs, total_time, H0, H_controls,
                                 initial_states,noise_operator,noise_spectrum,
@@ -236,6 +237,8 @@ def close_evolution(controls, sys_para,result):
         state = anp.matmul(propagator,state)
         result.noise_operators.append(anp.matmul(conjugate_transpose_ad(state),anp.matmul(sys_para.noise_operator,state)))
     noise_operatorfft=fft(anp.array(result.noise_operators),axis=0)/total_time_steps
+    result.jump_operators.append(noise_operatorfft)
+    result.jump_operators_norm.append(anp.linalg.norm(noise_operatorfft,axis=(1,2)))
     return noise_operatorfft,state
 
 def map_second_order(noise_operatorfft,sys_para):
@@ -247,7 +250,6 @@ def map_second_order(noise_operatorfft,sys_para):
     I=np.identity(dim)
     L=super_operator_k(noise_operatorfft[0])*noise_spectrum(0)
     a=len(noise_operatorfft)
-    print(noise_operatorfft[10])
     if a%2==0:
         for i in range(1, int(a/ 2)):
             L = L + super_operator_k(noise_operatorfft[i]) * noise_spectrum(i * omega_p)

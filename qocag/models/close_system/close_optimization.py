@@ -55,6 +55,7 @@ class GrapeSchroedingerResult(object):
         for i in range(self.costs_len):
             self.best_error_set[i]=self.cost[i][self.best_iteration-1]
             self.local_error_set[i] = self.cost[i][self.iteration - 1]
+        self.t_list=timegrid
         if self.save_file_path != None:
             np.save(self.save_file_path,result)
 

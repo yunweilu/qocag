@@ -66,7 +66,6 @@ class KOTargetStateInfidelity():
         Cost value. Float
         """
         if self.state_transfer==True:
-            dim=len(L_realized)
             # L_realized+=anp.identity(dim )
             initial_rho=anp.kron(initial_states,initial_states)
             exp_L=expm_pade(L_realized)
@@ -78,7 +77,8 @@ class KOTargetStateInfidelity():
         else:
             target_U_rotating=anp.matmul(conjugate_transpose_ad(self.target_states),U_realized)
             L_target_dag=anp.kron(target_U_rotating,anp.conjugate(target_U_rotating))
-            fidelity = anp.real(self.cost_normalization_constant*anp.array([anp.trace(anp.matmul(L_target_dag, L_realized))]))
+            exp_L = expm_pade(L_realized)
+            fidelity = anp.real(self.cost_normalization_constant*anp.array([anp.trace(anp.matmul(L_target_dag,exp_L))]))
         infidelity=1-fidelity
         self.cost_value=infidelity
         return infidelity
