@@ -70,7 +70,7 @@ def grape_schroedinger_discrete(total_time_steps,
                                 min_error=0,
                                 optimizer=Adam(),
                                 save_intermediate_states=False,save_file_path=None,
-                                save_iteration_step=0, mode='AD', tol=1e-8):
+                                save_iteration_step=0, mode='AD', tol=1e-8,fast_control=None):
     """
     This method optimizes the evolution of a set of states under the schroedinger
     equation for time-discrete control parameters.

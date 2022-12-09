@@ -13,7 +13,7 @@ class system_parameters():
                  optimizer,
                  save_file_path,
                  save_intermediate_states,
-                 save_iteration_step,noise_operator, noise_spectrum,mode, tol):
+                 save_iteration_step,noise_operator, noise_spectrum,mode, tol,fast_control):
         self.H_controls = np.array(H_controls)
         self.control_num = len(H_controls)
         self.total_time_steps = total_time_steps
@@ -53,6 +53,7 @@ class system_parameters():
                     cost.format(self.control_num, self.total_time_steps)
         self.noise_operator=noise_operator
         self.noise_spectrum = noise_spectrum
+        self.fast_control=fast_control
 
     def classification(self):
         self.state_packages = []

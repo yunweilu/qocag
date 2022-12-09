@@ -21,7 +21,7 @@ class KOTargetStateInfidelity():
     name = "KOTargetStateInfidelity"
     requires_step_evaluation = False
 
-    def __init__(self, target_states: np.ndarray, cost_multiplier :float = 1.) -> None:
+    def __init__(self, target_states: np.ndarray, cost_multiplier :float = 1., phase=True) -> None:
         if len(target_states.shape)>1:
             self.state_transfer = False
             self.state_count = target_states.shape[0]
@@ -34,6 +34,7 @@ class KOTargetStateInfidelity():
         self.cost_normalization_constant = 1 / (self.state_count ** 2)
         self.type = "control_implicitly_related"
         self.cost_format = (1)
+        self.phase=phase
 
     def format(self, control_num, total_time_steps):
         """
@@ -65,20 +66,23 @@ class KOTargetStateInfidelity():
         -------
         Cost value. Float
         """
+        exp_L = expm_pade(L_realized)
         if self.state_transfer==True:
             # L_realized+=anp.identity(dim )
             initial_rho=anp.kron(initial_states,initial_states)
-            exp_L=expm_pade(L_realized)
             states=anp.matmul(exp_L,initial_rho)
             U_realized=anp.kron(conjugate_transpose_ad(U_realized),anp.transpose(U_realized))
             target_states=anp.matmul(U_realized,self.target_states)
             target_states=anp.array([target_states])
             fidelity = anp.real(anp.inner(anp.conjugate(target_states), states))
         else:
-            target_U_rotating=anp.matmul(conjugate_transpose_ad(self.target_states),U_realized)
-            L_target_dag=anp.kron(target_U_rotating,anp.conjugate(target_U_rotating))
-            exp_L = expm_pade(L_realized)
-            fidelity = anp.real(self.cost_normalization_constant*anp.array([anp.trace(anp.matmul(L_target_dag,exp_L))]))
+            target_U_rotating = anp.matmul(conjugate_transpose_ad(self.target_states), U_realized)
+            L_target_dag = anp.kron(target_U_rotating, anp.conjugate(target_U_rotating))
+            if self.phase==True:
+                fidelity = anp.real(self.cost_normalization_constant*anp.array([anp.trace(anp.matmul(L_target_dag,exp_L))]))
+            else:
+                fidelity = anp.real(
+                    self.cost_normalization_constant * anp.array([anp.trace(anp.abs(anp.matmul(L_target_dag, exp_L)))]))
         infidelity=1-fidelity
         self.cost_value=infidelity
         return infidelity

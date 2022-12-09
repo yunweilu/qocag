@@ -35,7 +35,7 @@ def grape_keldysh_discrete(total_time_steps,
                                 min_error=0,
                                 optimizer=Adam(),
                                 save_intermediate_states=False,save_file_path=None,
-                                save_iteration_step=0,):
+                                save_iteration_step=0,fast_control=None):
     """
     This method optimizes the evolution of a set of states under the schroedinger
     equation for time-discrete control parameters.
@@ -113,12 +113,11 @@ def grape_keldysh_discrete(total_time_steps,
                                  optimizer,
                                  save_file_path,
                                  save_intermediate_states,
-                                 save_iteration_step,noise_operator,noise_spectrum,mode="AD",tol=1e-8)
+                                 save_iteration_step,noise_operator,noise_spectrum,mode="AD",tol=1e-8,fast_control=fast_control)
     initial_controls = initialize_controls(total_time_steps, initial_controls, sys_para.max_control_norms)
     costs_len = len(costs)
     result = Keldyshresult(costs_len, save_file_path)
     result.control_iter.append(initial_controls)
-    noise_operatorfft=close_evolution(initial_controls, sys_para, result)
     #turn to optimizer format which==1darray
     initial_controls = np.ravel(initial_controls)
     print_heading(result.costs_len)
@@ -223,20 +222,30 @@ def cost_calculation(controls,sys_para,result):
                 result.cost[i].append(cost.cost_value._value)
     return cost_value[0]
 def close_evolution(controls, sys_para,result):
+    fast_control = sys_para.fast_control
+    control_numbers=len(controls)
     total_time_steps = sys_para.total_time_steps
+    if fast_control!=None:
+        resolution = int(fast_control[0] )
+        evolution_time_steps=total_time_steps*resolution
+        # for i in range(total_time_steps):
+        #     for j in range(resolution):
+        #         total_control[:,i*resolution+j]=controls[:,i]*[osc_control[:,i*resolution+j]]
+    else:
+        evolution_time_steps=total_time_steps
     result.noise_operators=[]
     H_controls = sys_para.H_controls
     H0 = sys_para.H0
     dim=len(H0)
     state = np.identity(dim)
-    delta_t = sys_para.total_time / total_time_steps
-    for n in range(total_time_steps):
+    delta_t = sys_para.total_time / evolution_time_steps
+    for n in range(evolution_time_steps):
         time_step = n+1
-        H_total = get_H_total(controls, H_controls, H0, time_step)
+        H_total = get_H_total(controls, H_controls, H0, time_step,fast_control)
         propagator=expm_pade(-1j * delta_t * H_total)
         state = anp.matmul(propagator,state)
         result.noise_operators.append(anp.matmul(conjugate_transpose_ad(state),anp.matmul(sys_para.noise_operator,state)))
-    noise_operatorfft=fft(anp.array(result.noise_operators),axis=0)/total_time_steps
+    noise_operatorfft=fft(anp.array(result.noise_operators),axis=0)/evolution_time_steps
     result.jump_operators.append(noise_operatorfft)
     result.jump_operators_norm.append(anp.linalg.norm(noise_operatorfft,axis=(1,2)))
     return noise_operatorfft,state

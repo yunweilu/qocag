@@ -2,7 +2,7 @@ import autograd.numpy as anp
 import numpy as np
 
 def get_H_total(controls: np.ndarray, H_controls: np.ndarray,
-                H0: np.ndarray, time_step: np.ndarray) -> np.ndarray:
+                H0: np.ndarray, time_step: np.ndarray,fast_control: list) -> np.ndarray:
     """
     Get the total Hamiltonian in the specific time step
     Parameters
@@ -20,9 +20,12 @@ def get_H_total(controls: np.ndarray, H_controls: np.ndarray,
     -------
         The total Hamiltonian in the specific time step
     """
+    resolution=fast_control[0]
+    osc_control=fast_control[1]
     H_total = H0
-    for control, H_control in zip(controls, H_controls):
-        H_total = H_total + control[time_step - 1] * H_control
+    control_number=len(controls)
+    for i in range(control_number):
+        H_total = H_total + osc_control[i][time_step-1]*controls[i][(time_step - 1)//resolution] * H_controls[i]
     return H_total
 
 
