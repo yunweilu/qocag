@@ -69,7 +69,7 @@ def grape_schroedinger_discrete(total_time_steps,
                                 min_error=0,
                                 optimizer=Adam(),
                                 save_intermediate_states=False,save_file_path=None,
-                                save_iteration_step=0, mode='AD', tol=1e-8):
+                                save_iteration_step=0, mode='AD', tol=1e-8,robustness=None):
     """
     This method optimizes the evolution of a set of states under the schroedinger
     equation for time-discrete control parameters.
@@ -149,7 +149,7 @@ def grape_schroedinger_discrete(total_time_steps,
                                  optimizer,
                                  save_file_path,
                                  save_intermediate_states,
-                                 save_iteration_step, noise_operator,noise_spectrum,mode, tol)
+                                 save_iteration_step, noise_operator,noise_spectrum,mode, tol,robustness)
     initial_controls = initialize_controls(total_time_steps, initial_controls, sys_para.max_control_norms)
     costs_len = len(costs)
     result = GrapeSchroedingerResult(costs_len, save_file_path)
@@ -242,6 +242,9 @@ def close_evolution(controls, sys_para,result):
     state = sys_para.initial_states
     delta_t = sys_para.total_time / total_time_steps
     mode = sys_para.mode
+    if sys_para.robustness != None:
+        fluc_para = np.random.choice(sys_para.robustness[0], 1)[0]
+        fluc_oper = sys_para.robustness[1]
     cost_value = 0.
     for i,cost in enumerate(sys_para.costs):
         if cost.type=="control_explicitly_related":
@@ -256,6 +259,8 @@ def close_evolution(controls, sys_para,result):
         for n in range(total_time_steps):
             time_step = n+1
             H_total = get_H_total(controls, H_controls, H0, time_step)
+            if sys_para.robustness != None:
+                H_total = H_total + fluc_para*fluc_oper
             propagator=expm_pade(-1j * delta_t * H_total)
             state = anp.transpose(anp.matmul(propagator,anp.transpose(state)))
             for cost in sys_para.costs:
