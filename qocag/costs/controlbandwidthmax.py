@@ -25,14 +25,17 @@ class ControlBandwidthMax():
     def __init__(self, control_num: int,
                  total_time_steps: int, evolution_time: float,
                  bandwidths: ndarray,
-                 cost_multiplier: float = 1., ) -> None:
+                 cost_multiplier: float = 1., anharmonicity=None ) -> None:
         self.cost_multiplier = cost_multiplier
         self.bandwidths = bandwidths
         self.control_num = control_num
         dt = evolution_time / (total_time_steps - 1)
         self.total_time_steps = total_time_steps
-        self.freqs = anp.fft.fftfreq(total_time_steps, d=dt)
+        times = anp.linspace(0, dt*total_time_steps, total_time_steps + 1)
+        times = anp.delete(times, [len(times) - 1])
+        self.freqs = anp.fft.fftfreq(len(times), times[1] - times[0])
         self.type = "control_explicitly_related"
+        self.anharmonicity=-0.2
 
     def cost(self, controls: ndarray) -> float:
         """
@@ -62,5 +65,10 @@ class ControlBandwidthMax():
             penalized_ffts = control_fft_sq[penalty_freq_indices_min]
             penalty = penalty+ anp.sum(penalized_ffts)
             cost = cost + penalty
+        overall_con=controls[0]-1j*controls[1]
+        fourier = anp.abs(anp.fft.fft(overall_con))
+        for i in range(len(overall_con)):
+            if self.freqs[i]==self.anharmonicity:
+                cost = cost + fourier[i]
         self.cost_value = self.cost_multiplier*cost
         return self.cost_value

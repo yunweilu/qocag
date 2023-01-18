@@ -1,11 +1,11 @@
 import numpy as np
 from qocag import grape_schroedinger_discrete
-from qocag import TargetStateInfidelity
+from qocag import TargetStateInfidelityTime,TargetStateInfidelity
 from qocag import ControlVariation,generate_save_file_path,ControlBandwidthMax
 from qocag import LBFGSB,Adam
 total_time_steps=400
 #Toltal number of descretized time pieces
-target_states=np.array([[1,0],[0,1]])
+target_states=np.array([1,0])
 cost=TargetStateInfidelity(target_states=target_states)
 costs=[cost]
 #Target state is |1>
@@ -15,7 +15,7 @@ H0=np.array([[1,0],[0,-1]])*2*np.pi/2
 #Qubit frequency is 1GHZ
 H_controls=[np.array([[0,1],[1,0]])]
 #Control Hamiltonian is sigma_x
-initial_states=np.array([[0,1],[1,0]])
+initial_states=np.array([0,1])
 #Initial state is |0>
 # result=np.load("./out/00000_qubit01.npy",allow_pickle=True).item()
 # initial_control=result["control_iter"][-1]

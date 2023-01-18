@@ -265,9 +265,10 @@ def close_evolution(controls, sys_para,result):
             state = anp.transpose(anp.matmul(propagator,anp.transpose(state)))
             for cost in sys_para.costs:
                 if cost.type == "control_implicitly_related" and cost.requires_step_evaluation:
-                    cost_value = cost_value + cost.cost(state, mode, None,None,None)[0]
+                    cost_value = cost_value + cost.cost(state, mode, None,None,None)
         for i,cost in enumerate(sys_para.costs):
             if cost.name == "TargetStateInfidelity":
+                a = cost.cost(state, mode, None, None, None)
                 infidelity=cost.cost(state, mode, None,None,None)[0]
         for i,cost in enumerate(sys_para.costs):
             if cost.name=="Robustness":
@@ -283,6 +284,9 @@ def close_evolution(controls, sys_para,result):
                     result.cost[i].append(cost.cost_value[0])
                 else:
                     result.cost[i].append(cost.cost_value._value[0])
+            if cost.type == "control_implicitly_related" and  cost.requires_step_evaluation:
+                cost_value = cost_value + cost.cost(state, mode, None,None,None)
+                result.cost[i].append(cost_value._value)
         return cost_value
 
 def close_evolution_ag_paral(controls, sys_para,result):

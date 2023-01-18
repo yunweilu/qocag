@@ -21,7 +21,7 @@ class TargetStateInfidelity():
     name = "TargetStateInfidelity"
     requires_step_evaluation = False
 
-    def __init__(self, target_states: np.ndarray, cost_multiplier :float = 1.) -> None:
+    def __init__(self, target_states: np.ndarray, cost_multiplier :float = 1.,subspace_dim=None) -> None:
         if len(target_states.shape)>1:
             self.state_transfer = False
             self.state_count = target_states.shape[0]
@@ -31,7 +31,9 @@ class TargetStateInfidelity():
             self.state_count = 1
             self.target_states = np.array([target_states])
         self.cost_multiplier = cost_multiplier
-        self.cost_normalization_constant = 1 / (self.state_count ** 2)
+        if subspace_dim==None:
+            subspace_dim=len(self.target_states[0])
+        self.cost_normalization_constant = 1 / (subspace_dim ** 2)
         self.target_states_dagger = conjugate_transpose_ad(self.target_states)
         self.type = "control_implicitly_related"
         self.cost_format = (1)

@@ -26,7 +26,7 @@ class TargetStateInfidelityTime():
     name = "TargetStateInfidelityTime"
     requires_step_evaluation = True
 
-    def __init__(self, target_states: np.ndarray, cost_multiplier :float = 1.) -> None:
+    def __init__(self, target_states: np.ndarray, cost_multiplier :float = 1.,subspace_dim=None) -> None:
 
         if len(target_states.shape)==2:
             self.state_transfer = False
@@ -38,6 +38,10 @@ class TargetStateInfidelityTime():
             self.target_states = np.array([target_states])
         self.cost_multiplier = cost_multiplier
         self.cost_multiplier = cost_multiplier
+        if subspace_dim == None:
+            self.subspace_dim = len(target_states[0])
+        else:
+            self.subspace_dim = subspace_dim
         self.target_states_dagger = conjugate_transpose_ad(self.target_states)
         self.type = "control_implicitly_related"
 
@@ -56,7 +60,7 @@ class TargetStateInfidelityTime():
             Number of total time steps
         """
         self.total_time_steps = total_time_steps
-        self.cost_normalization_constant = 1 / ((self.state_count ** 2) * total_time_steps)
+        self.cost_normalization_constant = 1 / (  total_time_steps)
         self.cost_format = (total_time_steps)
         self.grad_format = (control_num, self.total_time_steps)
 
@@ -102,7 +106,7 @@ class TargetStateInfidelityTime():
         inner_product_square = anp.real(inner_product * anp.conjugate(inner_product))
         # Normalize the cost for the number of evolving states
         # and the number of times the cost==computed.
-        cost_value = (1 - inner_product_square) * self.cost_normalization_constant
+        cost_value = (1 - inner_product_square/self.subspace_dim**2) * self.cost_normalization_constant
         return cost_value * self.cost_multiplier
 
     def cost_value_ag(self, forward_state: np.ndarray,
