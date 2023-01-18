@@ -134,7 +134,7 @@ def cost_only(controls, sys_para,result):
         controls = sys_para.impose_control_conditions(controls)
     # impose boundary conditions for control
     sys_para.only_cost = True
-    cost_value = close_evolution(controls, sys_para,result)
+    cost_value = cost_calculation(controls, sys_para,result)
     # Evaluate the cost function.
     if cost_value <= sys_para.min_error:
         terminate = True
@@ -142,7 +142,6 @@ def cost_only(controls, sys_para,result):
         terminate = False
     # Determine if optimization should terminate.
     return cost_value, terminate
-
 def cost_gradients(controls, sys_para,result):
     """
     This function==used to get cost values and gradients by only automatic differentiation
@@ -180,29 +179,6 @@ def cost_gradients(controls, sys_para,result):
     result.save_data(times)
     print_grads(result.iteration, cost_value, grads,result.local_error_set)
     return grads, terminate
-def cost_only(controls, sys_para,result):
-    """
-    Get cost_values by evolving schrodinger equation.
-    Args:
-        controls :: ndarray - control amplitudes
-        sys_para :: class - a class that contains system infomation
-    return: cost values and gradients
-    """
-    total_time_steps=sys_para.total_time_steps
-    control_num = sys_para.control_num
-    controls = np.reshape(controls, (control_num, total_time_steps))
-    # turn the optimizer format to the format given by user
-    if sys_para.impose_control_conditions:
-        controls = sys_para.impose_control_conditions(controls)
-    # impose boundary conditions for control
-    cost_value = cost_calculation(controls,sys_para,result)
-    if cost_value <= sys_para.min_error:
-        terminate = True
-    else:
-        terminate = False
-    # Determine if optimization should terminate.
-    return cost_value, terminate
-
 def cost_calculation(controls,sys_para,result):
     noise_operatorfft,U_realized=close_evolution(controls, sys_para,result)
     L_realized=map_second_order(noise_operatorfft,sys_para)
@@ -223,7 +199,6 @@ def cost_calculation(controls,sys_para,result):
     return cost_value[0]
 def close_evolution(controls, sys_para,result):
     fast_control = sys_para.fast_control
-    control_numbers=len(controls)
     total_time_steps = sys_para.total_time_steps
     if fast_control!=None:
         resolution = int(fast_control[0] )
@@ -249,14 +224,12 @@ def close_evolution(controls, sys_para,result):
     result.jump_operators.append(noise_operatorfft)
     result.jump_operators_norm.append(anp.linalg.norm(noise_operatorfft,axis=(1,2)))
     return noise_operatorfft,state
-
 def map_second_order(noise_operatorfft,sys_para):
     total_time=sys_para.total_time
     noise_spectrum=sys_para.noise_spectrum
     omega_p=2*np.pi/total_time
     H0=sys_para.H0
     dim=len(H0)
-    I=np.identity(dim)
     L=super_operator_k(noise_operatorfft[0])*noise_spectrum(0)
     a=len(noise_operatorfft)
     if a%2==0:

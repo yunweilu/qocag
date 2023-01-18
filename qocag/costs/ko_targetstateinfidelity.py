@@ -53,7 +53,6 @@ class KOTargetStateInfidelity():
         self.total_time_steps = total_time_steps
         self.grad_format = (control_num, self.total_time_steps)
         self.cost_format = (1)
-
     def cost(self, L_realized:np.ndarray,U_realized:np.ndarray,
                       initial_states:np.ndarray) -> float:
         """

@@ -3,7 +3,7 @@ from qocag import grape_schroedinger_discrete
 from qocag import TargetStateInfidelity
 from qocag import ControlVariation,generate_save_file_path,ControlBandwidthMax
 from qocag import LBFGSB,Adam
-total_time_steps=400
+total_time_steps=100
 #Toltal number of descretized time pieces
 target_states=np.array([[1,0],[0,1]])
 cost=TargetStateInfidelity(target_states=target_states)
@@ -25,5 +25,5 @@ initial_control=(np.pi/total_time)*np.array([np.cos(2*np.pi*times)])
 save_file_path=generate_save_file_path("tls_ko","./out")
 result=grape_schroedinger_discrete(total_time_steps,
                                 costs, total_time, H0, H_controls,
-                                initial_states,max_iteration_num=1,
-                                optimizer=Adam(), mode='AD',tol=1e-15,initial_controls=initial_control,save_file_path=save_file_path)
+                                initial_states,max_iteration_num=1000,
+                                optimizer=Adam(), mode='AD',tol=1e-15)

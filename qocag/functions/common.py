@@ -20,12 +20,16 @@ def get_H_total(controls: np.ndarray, H_controls: np.ndarray,
     -------
         The total Hamiltonian in the specific time step
     """
-    resolution=fast_control[0]
-    osc_control=fast_control[1]
+    control_number = len(controls)
     H_total = H0
-    control_number=len(controls)
-    for i in range(control_number):
-        H_total = H_total + osc_control[i][time_step-1]*controls[i][(time_step - 1)//resolution] * H_controls[i]
+    if fast_control!=None:
+        resolution=fast_control[0]
+        osc_control=fast_control[1]
+        for i in range(control_number):
+            H_total = H_total + osc_control[i][time_step-1]*controls[i][(time_step - 1)//resolution] * H_controls[i]
+    else:
+        for i in range(control_number):
+            H_total = H_total + controls[i][time_step - 1] * H_controls[i]
     return H_total
 
 

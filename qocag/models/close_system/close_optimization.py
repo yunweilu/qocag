@@ -150,7 +150,7 @@ def grape_schroedinger_discrete(total_time_steps,
                                  optimizer,
                                  save_file_path,
                                  save_intermediate_states,
-                                 save_iteration_step, noise_operator,noise_spectrum,mode, tol)
+                                 save_iteration_step, noise_operator,noise_spectrum,mode, tol,fast_control)
     initial_controls = initialize_controls(total_time_steps, initial_controls, sys_para.max_control_norms)
     costs_len = len(costs)
     result = GrapeSchroedingerResult(costs_len, save_file_path)
@@ -243,6 +243,7 @@ def close_evolution(controls, sys_para,result):
     state = sys_para.initial_states
     delta_t = sys_para.total_time / total_time_steps
     mode = sys_para.mode
+    fast_control=sys_para.fast_control
     cost_value = 0.
     for i,cost in enumerate(sys_para.costs):
         if cost.type=="control_explicitly_related":
@@ -256,7 +257,7 @@ def close_evolution(controls, sys_para,result):
     if mode=="AD":
         for n in range(total_time_steps):
             time_step = n+1
-            H_total = get_H_total(controls, H_controls, H0, time_step)
+            H_total = get_H_total(controls, H_controls, H0, time_step,fast_control)
             propagator=expm_pade(-1j * delta_t * H_total)
             state = anp.transpose(anp.matmul(propagator,anp.transpose(state)))
             for cost in sys_para.costs:

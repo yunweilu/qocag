@@ -20,7 +20,7 @@ initial_states=np.array([[1,0],[0,1]])
 # result=np.load("./out/00000_qubit01.npy",allow_pickle=True).item()
 # initial_control=result["control_iter"][-1]
 
-initial_control=np.array([np.ones(total_time_steps)])
+initial_control=1e-2*np.array([np.ones(total_time_steps)])
 save_file_path=generate_save_file_path("tls_ko","./out")
 def S_B(w):
     if w>0:
@@ -35,6 +35,6 @@ osc_control=(np.pi/total_time)*np.array([np.cos(2*np.pi*times)])
 fast_control=[resolution,osc_control]
 result=grape_keldysh_discrete(total_time_steps,
                                 costs, total_time, H0, H_controls,
-                                initial_states,H_controls[0],max_iteration_num=1,
+                                initial_states,H_controls[0],max_iteration_num=100,
                                 optimizer=Adam(),initial_controls=initial_control,noise_spectrum=S_B,
                               fast_control=fast_control)
