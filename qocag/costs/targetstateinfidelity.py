@@ -74,6 +74,7 @@ class TargetStateInfidelity():
         """
         if mode=="AD":
             self.cost_value=self.cost_value_ad(forward_state)
+            print(forward_state)
             return self.cost_value
         else:
             return self.cost_value_ag(forward_state, backward_state)
