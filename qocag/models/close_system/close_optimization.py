@@ -246,6 +246,7 @@ def close_evolution(controls, sys_para,result):
         fluc_para = np.random.choice(sys_para.robustness[0], 1)[0]
         fluc_oper = sys_para.robustness[1]
     cost_value = 0.
+    print(fluc_para/(2*np.pi))
     for i,cost in enumerate(sys_para.costs):
         if cost.type=="control_explicitly_related":
             cost_value = cost_value + cost.cost(controls)
@@ -261,6 +262,7 @@ def close_evolution(controls, sys_para,result):
             H_total = get_H_total(controls, H_controls, H0, time_step)
             if sys_para.robustness != None:
                 H_total = H_total + fluc_para*fluc_oper
+
             propagator=expm_pade(-1j * delta_t * H_total)
             state = anp.transpose(anp.matmul(propagator,anp.transpose(state)))
             for cost in sys_para.costs:

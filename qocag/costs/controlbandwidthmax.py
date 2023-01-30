@@ -65,10 +65,5 @@ class ControlBandwidthMax():
             penalized_ffts = control_fft_sq[penalty_freq_indices_min]
             penalty = penalty+ anp.sum(penalized_ffts)
             cost = cost + penalty
-        overall_con=controls[0]-1j*controls[1]
-        fourier = anp.abs(anp.fft.fft(overall_con))
-        for i in range(len(overall_con)):
-            if self.freqs[i]==self.anharmonicity:
-                cost = cost + fourier[i]
         self.cost_value = self.cost_multiplier*cost
         return self.cost_value
