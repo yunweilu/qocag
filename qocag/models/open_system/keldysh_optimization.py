@@ -210,13 +210,13 @@ def cost_calculation(controls,sys_para,result):
     for i,cost in enumerate(sys_para.costs):
         if cost.type=="control_explicitly_related":
             cost_value = cost_value + cost.cost(controls)
-            if type(cost.cost_value)==np.float:
+            if type(cost.cost_value)==float:
                 result.cost[i].append(cost.cost_value)
             else:
                 result.cost[i].append(cost.cost_value._value)
         else:
             cost_value = cost_value + cost.cost(L_realized,U_realized,sys_para.initial_states)
-            if type(cost.cost_value)==np.float:
+            if type(cost.cost_value)==float:
                 result.cost[i].append(cost.cost_value)
             else:
                 result.cost[i].append(cost.cost_value._value)

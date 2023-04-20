@@ -25,7 +25,7 @@ class ControlBandwidthMax():
     def __init__(self, control_num: int,
                  total_time_steps: int, evolution_time: float,
                  bandwidths: ndarray,
-                 cost_multiplier: float = 1., anharmonicity=None ) -> None:
+                 cost_multiplier: float = 1., ) -> None:
         self.cost_multiplier = cost_multiplier
         self.bandwidths = bandwidths
         self.control_num = control_num

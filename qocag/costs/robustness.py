@@ -1,17 +1,15 @@
 import autograd.numpy as anp
-from qocag.functions.common import get_H_total
-from qocag.functions import expm_pade
+from qocag.functions.common import conjugate_transpose_ad
 import numpy as np
 class Robustness():
     name = "Robustness"
     requires_step_evaluation = False
 
-    def __init__(self, robust_operator: np.ndarray,delta:float, cost_multiplier :float = 1.) -> None:
-        self.type = "control_implicitly_related"
+    def __init__(self, robust_operator: np.ndarray, cost_multiplier :float = 1.,order : int = 1) -> None:
+        self.type = "robust"
         self.cost_multiplier = cost_multiplier
         self.robust_operator = robust_operator
-        self.sys_para = 0
-        self.delta = delta
+        self.order = order
 
     def format(self, control_num, total_time_steps):
         """
@@ -30,30 +28,18 @@ class Robustness():
         self.total_time_steps = total_time_steps
         self.cost_format = (1)
 
-    def close_evolution(self,controls, sys_para):
-        """
-        Get cost_values by evolving schrodinger equation.
-        Args:
-            controls :: ndarray - control amplitudes
-            sys_para :: class - a class that contains system infomation
-        return: cost values and gradients
-        """
-        total_time_steps = sys_para.total_time_steps
-        H_controls = sys_para.H_controls
-        H0 = sys_para.H0
-        state = sys_para.initial_states
-        delta_t = sys_para.total_time / total_time_steps
-        for n in range(total_time_steps):
-            time_step = n + 1
-            H_total = get_H_total(controls, H_controls, H0, time_step)
-            propagator = expm_pade(-1j * delta_t * H_total)
-            state = anp.transpose(anp.matmul(propagator, anp.transpose(state)))
-        for i,cost in enumerate(sys_para.costs):
-            if cost.name == "TargetStateInfidelity":
-                return cost.cost_value_ad(state)
+    def commutator(self,A,B):
+        return anp.matmul(A,B)-anp.matmul(B,A)
 
+    def norm_frob(self,A):
+        A = A - A[0][0]*np.identity(len(A))
+        norm = anp.abs(A[1][1])**2
+        for i in range(2):
+            for j in range(i+1,len(A)):
+                norm += anp.abs(A[i][j])**2
+        return anp.sqrt(norm)
 
-    def cost(self, controls,sys_para,infidelity) -> np.ndarray:
+    def cost(self, states,deltat,n,cost_value,total_time,control_H=None,control=None) -> np.ndarray:
         """
         Compute the cost. The cost==the overlap of each evolved state and its target state.
 
@@ -70,9 +56,62 @@ class Robustness():
         time_step:
             Toltal number of time steps
         """
-        sys_para.H0+= self.delta*self.robust_operator
-        perturbed_infidelity=self.close_evolution(controls, sys_para)
-        self.cost_value=anp.abs((infidelity-perturbed_infidelity)/self.delta)*self.cost_multiplier**2
-        return self.cost_value
+        states=anp.transpose(states)
+        self.robust_tilda=[]
+        cost1=0
+        cost2=0
+        cost3=0
+        if n==0:
+            self.A1=[]
+            self.cost1 = np.zeros(len(self.robust_operator))
+            for i in range(len(self.robust_operator)):
+                self.A1.append(anp.zeros_like(self.robust_operator[0]))
+            if self.order >= 2:
+                self.A2=[]
+                for i in range(len(self.robust_operator)):
+                    self.A2.append([])
+                    for j in range(len(self.robust_operator)):
+                        self.A2[i].append(anp.zeros((len(self.robust_operator[0]),len(self.robust_operator[0]))))
+            if self.order >=3:
+                self.A3=0*states
+            self.cost2 = np.zeros((len(self.robust_operator),len(self.robust_operator)))
+
+        for i in range(len(self.robust_operator)):
+            states_dag=conjugate_transpose_ad(states)
+            self.robust_tilda.append(anp.matmul(states_dag,anp.matmul(self.robust_operator[i],states)))
+            self.A1[i]=self.A1[i]+deltat*self.robust_tilda[i]/total_time
+
+
+        if self.order >= 2:
+            for i in range(len(self.robust_operator)):
+                for j in range(len(self.robust_operator)):
+                    self.A2[i][j]+=deltat/2*self.commutator(self.A1[i],self.robust_tilda[j])/total_time
+        if self.order >=3:
+            self.A3 +=deltat/2*self.commutator(self.A2[0][0],self.robust_tilda[0])/total_time
+        if cost_value==True:
+            total_cost = 0
+            for i in range(len(self.robust_tilda)):
+                print(self.norm_frob(self.A1[i]))
+                cost1 += self.norm_frob(self.A1[i])
+
+                # total_cost += (anp.linalg.norm(self.A1[i]-self.A1[i][0][0]*np.identity(len(self.A1[i])))/total_time)**2
+
+            if self.order >= 2:
+
+                for i in range(len(self.robust_tilda)):
+                    for j in range(len(self.robust_tilda)):
+                        print(self.norm_frob(self.A2[i][j]))
+                        cost2 +=self.norm_frob(self.A2[i][j])
+            if self.order >= 3:
+                print((self.norm_frob(self.A3)))
+                cost3 +=self.norm_frob(self.A3)
+            cost = np.array([cost1, cost2, cost3])
+            for i in range(len(cost)):
+                total_cost += cost[i]* self.cost_multiplier[i]
+            self.cost_value=total_cost
+            return total_cost
+        else:
+            self.cost_value=0.
+            return 0
 
 

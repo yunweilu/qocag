@@ -1,28 +1,96 @@
-import numpy as np
+
+from scipy.sparse import identity,csc_matrix, dia_matrix
+
+from scipy.sparse import kron
 from qocag import grape_schroedinger_discrete
-from qocag import TargetStateInfidelityTime,TargetStateInfidelity
-from qocag import ControlVariation,generate_save_file_path,ControlBandwidthMax
-from qocag import LBFGSB,Adam
-total_time_steps=400
-#Toltal number of descretized time pieces
-target_states=np.array([1,0])
-cost=TargetStateInfidelity(target_states=target_states)
-costs=[cost]
-#Target state is |1>
-total_time=10
-#Evolution time is 10 ns
-H0=np.array([[1,0],[0,-1]])*2*np.pi/2
-#Qubit frequency is 1GHZ
-H_controls=[np.array([[0,1],[1,0]])]
-#Control Hamiltonian is sigma_x
-initial_states=np.array([0,1])
-#Initial state is |0>
-# result=np.load("./out/00000_qubit01.npy",allow_pickle=True).item()
-# initial_control=result["control_iter"][-1]
-times = np.linspace(0, total_time, total_time_steps+1)
-times=np.delete(times, [len(times) - 1])
-initial_control=(np.pi/total_time)*np.array([np.cos(2*np.pi*times)])
-result=grape_schroedinger_discrete(total_time_steps,
-                                costs, total_time, H0, H_controls,
-                                initial_states,max_iteration_num=1,
-                                optimizer=Adam(), mode='AD', tol=1e-15,initial_controls=initial_control,)
+from qocag import (TargetStateInfidelity)
+import numpy as np
+def Identity(H_size):
+    return identity(H_size)
+
+def harmonic(H_size):
+    diagnol = np.arange(H_size)
+    up_diagnol = np.sqrt(diagnol)
+    low_diagnol = np.sqrt(np.arange(1, H_size + 1))
+    a= dia_matrix(([ up_diagnol], [ 1]), shape=(H_size, H_size)).tocsc()
+    a_dag=dia_matrix(([ low_diagnol], [ -1]), shape=(H_size, H_size)).tocsc()
+    return a_dag,a
+
+def transmon(w_01,anharmonicity,H_size):
+    b_dag,b=harmonic(H_size=H_size)
+    H0=b_dag.dot(b)
+    diagnol=np.ones(H_size)
+    I= dia_matrix(([ diagnol], [ 0]), shape=(H_size, H_size)).tocsc()
+    H0=w_01*H0+anharmonicity/2*H0*(H0-I)
+    return H0,b_dag,b
+def get_control(N):
+    sigmap, sigmam = harmonic(N)
+    sigmap=sigmap
+    sigmam=sigmam
+    sigmax=sigmap+sigmam
+    control=[]
+    a = identity(N ** (2))
+    control.append(kron(sigmax, a, format="csc"))
+    for i in range(1, 2):
+        control.append(kron(kron(identity(N ** i), sigmax), identity(N ** (2 - i)), format="csc"))
+    control.append(kron(identity(N ** (2)), sigmax, format="csc"))
+    return control
+def get_int(N):
+    alpha=-0.225*2*np.pi
+    g=0.*2*np.pi
+    sigmap, sigmam = harmonic(N)
+    sigmaz=sigmap.dot(sigmam)
+    H_int=g*kron(sigmam,sigmap)+g*kron(sigmap,sigmam)
+    H_anh=1/2*alpha*(sigmaz*(sigmaz-identity(N)))
+    H0=kron(H_anh,identity(N**2))
+    H0=H0+kron(identity(N),kron(H_anh,identity(N)))
+    H0 = H0 + kron(identity(N**2), H_anh)
+    H0 = H0 + kron(H_int,identity(N))
+    H0 = H0 + kron(identity(N ),H_int)
+    return H0
+
+def Had(d):
+    Had=np.zeros((d,d))
+    Had[0][0]=1
+    Had[0][1] = 1
+    Had[1][0] = 1
+    Had[1][1] = 1
+    Had=1/np.sqrt(2)*Had
+    Had_gat=Had
+    for i in range(3-1):
+        Had_gat=np.kron(Had_gat,Had)
+    return Had_gat.reshape(d**3,d**3,1)
+
+def get_initial(N):
+    state=[]
+    for i in range(N**3):
+        s=np.zeros((N ** 3, 1))
+        s[i]=1
+        state.append(s)
+    return np.array(state)
+
+def simulation(q_number, mode):
+    H_0=csc_matrix(get_int(q_number))
+    H_control=get_control(q_number)
+
+    evolution_time=5
+    CONTROL_EVAL_COUNT = 5
+    ITERATION_COUNT = 1
+
+    Initial_state = get_initial(q_number).reshape((q_number ** 3, q_number ** 3))
+    Target = Had(q_number).reshape(q_number ** 3, q_number ** 3)
+    # Target = np.ones((q_number ** 3, q_number ** 3))
+    COSTS = [TargetStateInfidelity(Target, cost_multiplier=1)]
+    H_0 = H_0.toarray()
+    del H_control[2]
+    del H_control[1]
+    for i in range(len(H_control)):
+        H_control[i] = H_control[i].toarray()
+
+    result = grape_schroedinger_discrete(CONTROL_EVAL_COUNT,
+                                         COSTS, evolution_time, H_0, H_control,
+                                         Initial_state, max_iteration_num=1,
+                                          mode="AD", tol=1e-15,  )
+    return result
+result=simulation(2,"AG")
+# [[4.1456956e-05 4.1456956e-05 4.1456956e-05 4.1456956e-05 4.1456956e-05]]

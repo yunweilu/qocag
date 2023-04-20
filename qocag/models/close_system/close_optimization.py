@@ -14,6 +14,7 @@ from functools import partial
 import warnings
 warnings.simplefilter("ignore", UserWarning)
 settings.MULTIPROC = "pathos"
+from autograd.extend import Box
 
 # Default float type in autograd==float32.
 class GrapeSchroedingerResult(object):
@@ -51,12 +52,19 @@ class GrapeSchroedingerResult(object):
         self.save_file_path=save_file_path
 
     def save_data(self,timegrid):
-        result={"control_iter":self.control_iter,"cost_iter":np.array(self.cost),"times":timegrid}
+        # print(np.array(self.cost))
+        # result={"control_iter":self.control_iter,"cost_iter":np.array(self.cost),"times":timegrid}
         for i in range(self.costs_len):
-            self.best_error_set[i]=self.cost[i][self.best_iteration-1]
-            self.local_error_set[i] = self.cost[i][self.iteration - 1]
-        if self.save_file_path != None:
-            np.save(self.save_file_path,result)
+            # if type(self.cost[i][self.best_iteration-1])==np.float64:
+            #     self.best_error_set[i]=self.cost[i][self.best_iteration-1]
+            # else:
+            #     self.best_error_set[i] = self.cost[i][self.best_iteration - 1]._value
+            if isinstance(self.cost[i][self.iteration - 1], Box):
+                self.local_error_set[i] = self.cost[i][self.iteration - 1]._value
+            else:
+                self.local_error_set[i] = self.cost[i][self.iteration - 1]
+        # if self.save_file_path != None:
+        #     np.save(self.save_file_path,result)
 
 def grape_schroedinger_discrete(total_time_steps,
                                 costs, total_time, H0, H_controls,
@@ -242,18 +250,22 @@ def close_evolution(controls, sys_para,result):
     state = sys_para.initial_states
     delta_t = sys_para.total_time / total_time_steps
     mode = sys_para.mode
+
     if sys_para.robustness != None:
-        fluc_para = np.random.choice(sys_para.robustness[0], 1)[0]
+        fluc_para=[]
+        for i in range(len(sys_para.robustness[0])):
+            fluc_para.append(np.random.choice(sys_para.robustness[0][i], 1)[0])
         fluc_oper = sys_para.robustness[1]
+        print(fluc_para[0]/(2*np.pi))
     cost_value = 0.
-    print(fluc_para/(2*np.pi))
+
     for i,cost in enumerate(sys_para.costs):
         if cost.type=="control_explicitly_related":
             cost_value = cost_value + cost.cost(controls)
-            if type(cost.cost_value)==np.float:
-                result.cost[i].append(cost.cost_value)
-            else:
+            if isinstance(cost.cost_value, Box):
                 result.cost[i].append(cost.cost_value._value)
+            else:
+                result.cost[i].append(cost.cost_value)
     if mode=="AG":
         return cost_value
     if mode=="AD":
@@ -261,34 +273,35 @@ def close_evolution(controls, sys_para,result):
             time_step = n+1
             H_total = get_H_total(controls, H_controls, H0, time_step)
             if sys_para.robustness != None:
-                H_total = H_total + fluc_para*fluc_oper
+                H_total = H_total + fluc_oper(fluc_para)
 
             propagator=expm_pade(-1j * delta_t * H_total)
             state = anp.transpose(anp.matmul(propagator,anp.transpose(state)))
             for cost in sys_para.costs:
                 if cost.type == "control_implicitly_related" and cost.requires_step_evaluation:
-                    cost_value = cost_value + cost.cost(state, mode, None,None,None)
+                    if n==0:
+                        cost.cost_value=0
+                    cost.cost_value +=  cost.cost(state, mode, None, None, None)
+                if cost.name == "Robustness":
+                    if n==total_time_steps-1:
+                        return_cost_value = True
+                    else:
+                        return_cost_value = False
+                    cost_value = cost_value + cost.cost(state,delta_t,n,return_cost_value,sys_para.total_time)
+                    if return_cost_value == True:
+                        if isinstance(cost.cost_value, Box):
+                            result.cost[i].append(cost.cost_value._value)
+                        else:
+                            result.cost[i].append(cost.cost_value)
+
+
         for i,cost in enumerate(sys_para.costs):
-            if cost.name == "TargetStateInfidelity":
-                a = cost.cost(state, mode, None, None, None)
-                infidelity=cost.cost(state, mode, None,None,None)[0]
-        for i,cost in enumerate(sys_para.costs):
-            if cost.name=="Robustness":
-                cost_value = cost_value + cost.cost(controls,sys_para,infidelity)[0]
-                if type(cost.cost_value) == np.ndarray:
-                    result.cost[i].append(cost.cost_value[0])
-                else:
-                    result.cost[i].append(cost.cost_value._value[0])
-                continue
             if cost.type == "control_implicitly_related" and not cost.requires_step_evaluation:
                 cost_value = cost_value + cost.cost(state, mode, None,None,None)[0]
-                if type(cost.cost_value) == np.ndarray:
-                    result.cost[i].append(cost.cost_value[0])
-                else:
-                    result.cost[i].append(cost.cost_value._value[0])
+                result.cost[i].append(cost.cost_value._value[0])
             if cost.type == "control_implicitly_related" and  cost.requires_step_evaluation:
-                cost_value = cost_value + cost.cost(state, mode, None,None,None)
-                result.cost[i].append(cost_value._value)
+                cost_value += cost.cost_value._value
+                result.cost[i].append(cost.cost_value._value)
         return cost_value
 
 def close_evolution_ag_paral(controls, sys_para,result):
@@ -333,8 +346,7 @@ def close_evolution_ag(controls, sys_para, state_package):
         for cost in sys_para.costs:
             if cost.type != "control_explicitly_related" and cost.requires_step_evaluation:
                 state_package[cost.name + "_cost_value"] =  cost.cost( state_package['forward_state'],mode,
-                                                                                  state_package[cost.name],state_package[cost.name + "_cost_value"]
-                                                                       ,n)
+                                                                                  state_package[cost.name],state_package[cost.name + "_cost_value"],n)
     for cost in sys_para.costs:
         if cost.type != "control_explicitly_related" and not cost.requires_step_evaluation:
             state_package[cost.name + "_cost_value"] =  cost.cost( state_package['forward_state'],mode,

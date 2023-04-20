@@ -29,7 +29,7 @@ class ForbidStates():
 
         self.forbidden_states_count = len(forbidden_states)
         self.type = "control_implicitly_related"
-
+        self.cost_value = 0
         if len(forbidden_states.shape)==3:
             self.state_transfer = False
             self.state_count = forbidden_states.shape[1]
@@ -101,7 +101,7 @@ class ForbidStates():
         else:
             inner_products_square = 0
             for forbidden_state in self.forbidden_states:
-                inner_products = anp.trace(anp.matmul(conjugate_transpose_ad(states), forbidden_state))
+                inner_products = anp.trace(anp.matmul(states, forbidden_state))
                 inner_products_square = inner_products_square + anp.real(inner_products * anp.conjugate(inner_products))
 
         # Normalize the cost for the number of evolving states

@@ -5,7 +5,7 @@ penalizes the infidelity of an evolved state and a target state.
 import numpy as np
 from qocag.functions.common import conjugate_transpose_ad
 import autograd.numpy as anp
-from qocag.functions import expmat_der_vec_mul
+from qocag.functions import expmat_der_vec_mul,expm_pade
 
 
 class TargetStateInfidelity():
@@ -21,7 +21,7 @@ class TargetStateInfidelity():
     name = "TargetStateInfidelity"
     requires_step_evaluation = False
 
-    def __init__(self, target_states: np.ndarray, cost_multiplier :float = 1.,subspace_dim=None) -> None:
+    def __init__(self, target_states: np.ndarray, cost_multiplier :float = 1.,subspace_dim=None,function=None) -> None:
         if len(target_states.shape)>1:
             self.state_transfer = False
             self.state_count = target_states.shape[0]
@@ -37,6 +37,7 @@ class TargetStateInfidelity():
         self.target_states_dagger = conjugate_transpose_ad(self.target_states)
         self.type = "control_implicitly_related"
         self.cost_format = (1)
+        self.function=function
 
     def format(self, control_num, total_time_steps):
         """
@@ -95,7 +96,12 @@ class TargetStateInfidelity():
         if self.state_transfer==True:
             inner_product = anp.inner(anp.conjugate(self.target_states), states)
         else:
-            inner_product = anp.array([anp.trace(anp.matmul(self.target_states_dagger, states))])
+            if self.function==None:
+                inner_product = anp.array([anp.trace(anp.matmul(self.target_states_dagger,  states))])
+            else:
+                angle,op=self.function(states._value)
+                u_rot = expm_pade(- 1j * angle * op)
+                inner_product = anp.array([anp.trace(anp.matmul(self.target_states_dagger, anp.matmul(u_rot, states)))])
         inner_product_square = anp.real(inner_product * anp.conjugate(inner_product))
         # Normalize the cost for the number of evolving states
         # and the number of times the cost==computed.
