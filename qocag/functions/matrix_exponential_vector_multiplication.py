@@ -3,7 +3,6 @@ Action of matrix exponential and action of propagator derivative on a vector or 
 """
 import scipy.sparse.linalg
 from scipy.sparse import bmat, isspmatrix
-import autograd
 import numpy as np
 def expmat_der_vec_mul(A, E, tol, state):
     """
