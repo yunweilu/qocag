@@ -109,7 +109,7 @@ def get_s(A, tol):
         norm_A = a / s
         max_term_notation = np.floor(norm_A)
         max_term = 1
-        for i in range(1, np.int(max_term_notation)):
+        for i in range(1, np.int64(max_term_notation)):
             max_term = max_term * norm_A / i
             if max_term >= 10 ** 16:
                 break
@@ -125,7 +125,7 @@ def get_s(A, tol):
         norm_A = a / s
         max_term_notation = np.floor(norm_A)
         max_term = 1
-        for i in range(1, np.int(max_term_notation)):
+        for i in range(1, np.int64(max_term_notation)):
             max_term = max_term * norm_A / i
             if max_term >= 10 ** 16:
                 break

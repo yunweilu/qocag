@@ -76,7 +76,7 @@ def control_ani(result):
         ax_fft.clear()
         for j in range(control_num):
             i=gap*(l)
-            i = np.int(i)
+            i = np.int64(i)
             if i>=len(controls):
                 i=-1
             ax_con.plot(times, controls[i][j], label=str(j))
